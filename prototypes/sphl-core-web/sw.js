@@ -1,5 +1,5 @@
 // SPHL Core service worker — offline shell cache
-const CACHE = "sphl-core-v10";
+const CACHE = "sphl-core-v11";
 const ASSETS = ["/", "/index.html", "/app.js", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", e => {

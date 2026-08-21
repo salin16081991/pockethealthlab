@@ -7,7 +7,7 @@
 // personal baselines, data export, SOS.
 // Every measurement: signal-quality gated, class-B/A tagged, versioned.
 // =====================================================================
-const APP_VERSION = "0.3.0";
+const APP_VERSION = "0.3.1";
 const PPG_ALGO = "0.2.2", RESP_ALGO = "0.1.0", MOTION_ALGO = "0.1.0",
       AUDIO_ALGO = "0.1.0";
 const MIN_IBI_MS = 333, MAX_IBI_MS = 1500;   // 40–180 bpm
@@ -223,8 +223,10 @@ function movingAverage(arr, w) {
 }
 function bandpass(values, fs, slowSec, fastSec) {
   const w = Math.max(3, Math.round(fs * slowSec));
-  let det = values.map((v, i) => v - movingAverage(values, w)[i]);
-  det = det.map((v, i) => v - movingAverage(det, w)[i]);
+  const ma1 = movingAverage(values, w);
+  let det = values.map((v, i) => v - ma1[i]);
+  const ma2 = movingAverage(det, w);
+  det = det.map((v, i) => v - ma2[i]);
   return movingAverage(det, Math.max(2, Math.round(fs * fastSec)));
 }
 function detectPeaks(sig, times, minGapMs, thrFactor) {
@@ -516,12 +518,14 @@ function analyseHeart() {
   const hrvOk = quality > 0.7 && cv < 0.2 && rmssd !== null && rmssd < 150;
   return { sig, value: hr, rmssd: hrvOk ? rmssd : null, quality };
 }
+let lastAnalyseAt = 0;
 function heartTick(now) {
   const s = samples[samples.length - 1];
   const ok = fingerDetected(s);
   updatePill(ok, ok ? T().v_finger_ok : T().v_finger_lost, now);
-  const res = analyseHeart();
-  lastResult = res;
+  // Full analysis is heavy; run it at 2 Hz, keep frame capture at full rate
+  if (now - lastAnalyseAt > 500) { lastResult = analyseHeart(); lastAnalyseAt = now; }
+  const res = lastResult;
   $("hrLive").textContent = (res && res.value && res.quality > 0.35) ? Math.round(res.value) : "--";
   $("measureTitle").textContent = (res && res.value) ? T().hold_still : T().measuring;
   if (res && res.sig) drawWave(res.sig, "#ff5d73");
@@ -763,6 +767,7 @@ const ICON_OK = '<svg width="84" height="84" viewBox="0 0 24 24"><circle cx="12"
 const ICON_RETRY = '<svg width="84" height="84" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="rgba(255,200,87,0.15)"/><path d="M12 6.5V4l-3.2 3 3.2 3V7.7a4.3 4.3 0 1 1-4.3 4.3H6a6 6 0 1 0 6-5.5z" fill="#ffc857"/></svg>';
 
 function finishSensorTest() {
+  if (CUR.kind === "ppg") lastResult = analyseHeart();  // final full-window pass
   const res = lastResult;
   teardown();
   const t = CUR;
