@@ -1,0 +1,30 @@
+services:
+  sphl-web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: sphl-web:latest
+    container_name: sphl-web
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+  # Optional: automatic HTTPS reverse proxy for self-hosting on a server.
+  # Uncomment, set your domain + email, and point the domain's DNS A record
+  # at the server. Browsers require HTTPS for camera access.
+  #
+  # caddy:
+  #   image: caddy:2-alpine
+  #   container_name: sphl-caddy
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   command: caddy reverse-proxy --from lab.sirony.in --to sphl-web:80
+  #   depends_on:
+  #     - sphl-web
+  #   volumes:
+  #     - caddy_data:/data
+  #   restart: unless-stopped
+  #
+# volumes:
+#   caddy_data:
