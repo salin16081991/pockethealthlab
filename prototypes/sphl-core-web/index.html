@@ -157,6 +157,7 @@
     <div id="history"></div>
   </div>
   <div class="disclaimer" data-i18n="disclaimer"></div>
+  <div class="disclaimer" id="verLine" style="opacity:0.7"></div>
 </section>
 
 <!-- ============ GUIDE ============ -->
@@ -262,7 +263,8 @@
 //   2. Respiratory rate  — phone-on-chest motion sensing (§9.1/§18)
 // Both use signal-quality gating and the personal baseline (§22–23).
 // =================================================================
-const PPG_ALGO = "0.2.1";
+const APP_VERSION = "0.2.2";
+const PPG_ALGO = "0.2.2";
 const RESP_ALGO = "0.1.0";
 const HEART_SECONDS = 30, BREATH_SECONDS = 45;
 const FS_TARGET = 30;
@@ -518,7 +520,7 @@ function autocorrHR(sig, fs) {
       bestR = r[lag]; bestLag = lag;
     }
   }
-  if (bestLag < 0 || bestR < 0.25) return null;
+  if (bestLag < 0 || bestR < 0.35) return null;
   // Sub-harmonic guard: if double the period is also a local peak scoring
   // nearly as well, the true beat is the slower one.
   const dbl = bestLag * 2;
@@ -573,6 +575,11 @@ function analyseHeart() {
   // Hard gate: without independent agreement from beat detection, a result
   // can never pass (0.5) no matter how strong the periodicity looks.
   if (ibis.length < 4 || agreement < 0.5) quality = Math.min(quality, 0.4);
+  // Noise trap: broadband noise drives BOTH estimators to the rate ceiling
+  // (beat detector fires at its refractory limit, autocorrelation at the
+  // shortest lag) and they fake-agree near 180. Rates that high are only
+  // accepted from an unambiguous, highly regular signal.
+  if (ac.hr > 165 && (ac.strength < 0.6 || cv > 0.12)) quality = Math.min(quality, 0.4);
   // HRV is far more fragile than HR: report it only from a clean recording
   const hrvOk = quality > 0.7 && cv < 0.2 && rmssd !== null && rmssd < 150;
   return { sig, hr: ac.hr, rmssd: hrvOk ? rmssd : null, quality };
@@ -864,6 +871,7 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
 }
 
 // boot
+$("verLine").textContent = "SPHL web v" + APP_VERSION;
 if (LANG && I18N[LANG]) { applyI18n(); renderHistory(); show("scr-home"); }
 else { show("scr-lang"); }
 </script>
