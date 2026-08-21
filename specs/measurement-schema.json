@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sirony.health/schemas/measurement/v0.1",
+  "title": "SPHL Measurement",
+  "description": "Canonical record for every measurement in the SPHL platform. Uncertainty is first-class data (blueprint rule 7). Evidence class per blueprint section 4.",
+  "type": "object",
+  "required": [
+    "measurement_id", "user_id", "measurement_type", "value", "unit",
+    "source", "evidence_class", "tier", "signal_quality", "confidence",
+    "algorithm_version", "timestamp"
+  ],
+  "properties": {
+    "measurement_id": { "type": "string", "format": "uuid" },
+    "user_id": { "type": "string" },
+    "device_id": { "type": "string", "description": "Phone identifier" },
+    "module": {
+      "type": "object",
+      "description": "Present when an external module produced the signal",
+      "properties": {
+        "vendor_id": { "type": "string" },
+        "product_id": { "type": "string" },
+        "serial": { "type": "string" },
+        "fw_version": { "type": "string" },
+        "calibration_valid": { "type": "boolean" }
+      }
+    },
+    "measurement_type": {
+      "type": "string",
+      "description": "From the SPHL Capability Registry",
+      "examples": ["heart_rate", "hrv_rmssd", "spo2", "ecg_rhythm", "respiratory_rate", "glucose", "wound_area"]
+    },
+    "value": { "type": ["number", "string"] },
+    "unit": { "type": "string", "examples": ["bpm", "ms", "%", "mg/dL", "cm2"] },
+    "source": {
+      "type": "string",
+      "examples": ["camera_ppg", "module_ecg", "module_spo2", "microphone", "accelerometer", "cartridge_optical"]
+    },
+    "evidence_class": {
+      "type": "string",
+      "enum": ["A", "B", "C"],
+      "description": "A = direct physical measurement; B = derived physiological measurement (validated against reference); C = AI estimate / screening signal — must be labelled as estimate in UI"
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["T0", "T1", "T2"],
+      "description": "Sirony Module Standard certification tier of the producing hardware+algorithm pair. Phone-native features are T0 unless the specific phone model + algorithm combination is validated."
+    },
+    "signal_quality": { "type": "number", "minimum": 0, "maximum": 1 },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "raw_signal_reference": { "type": "string", "description": "Pointer to stored raw signal for traceability/re-analysis" },
+    "algorithm_version": { "type": "string", "description": "Immutable for clinical traceability" },
+    "calibration_version": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "conditions": {
+      "type": "object",
+      "description": "Measurement context",
+      "properties": {
+        "motion": { "type": "string", "enum": ["low", "medium", "high"] },
+        "posture": { "type": "string" },
+        "activity_state": { "type": "string" },
+        "ambient_light": { "type": "string" },
+        "finger_contact": { "type": "string" },
+        "environment": { "type": "string" }
+      }
+    },
+    "reference_range": {
+      "type": "object",
+      "properties": {
+        "population_low": { "type": "number" },
+        "population_high": { "type": "number" },
+        "personal_baseline_mean": { "type": "number" },
+        "personal_baseline_sd": { "type": "number" }
+      }
+    },
+    "interpretation": {
+      "type": "object",
+      "description": "Conservative, layered per blueprint section 26",
+      "properties": {
+        "summary": { "type": "string" },
+        "baseline_deviation_sigma": { "type": "number" },
+        "limitations": { "type": "array", "items": { "type": "string" } },
+        "next_action": {
+          "type": "string",
+          "enum": ["none", "repeat_measurement", "cross_check_other_sensor", "monitor_trend", "recommend_clinical_assessment", "emergency_guidance"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0b1220">
+<title>SPHL Core — Camera PPG</title>
+<style>
+  :root {
+    --bg: #0b1220; --card: #121c30; --card2: #182642;
+    --text: #e8eefb; --muted: #8fa3c8; --accent: #ff5d73;
+    --good: #3ddc97; --warn: #ffc857; --bad: #ff5d73;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; padding: 16px; max-width: 480px; margin: 0 auto;
+  }
+  header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.02em; }
+  header span { color: var(--muted); font-size: 0.72rem; }
+  .disclaimer {
+    font-size: 0.7rem; color: var(--muted); background: var(--card);
+    border: 1px solid #223252; border-radius: 8px; padding: 8px 10px; margin: 10px 0 14px;
+  }
+  .disclaimer b { color: var(--warn); }
+  .card { background: var(--card); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .hr-display { text-align: center; padding: 20px 16px; }
+  .hr-value { font-size: 4rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+  .hr-value small { font-size: 1.1rem; font-weight: 500; color: var(--muted); }
+  .hr-label { color: var(--muted); font-size: 0.8rem; margin-top: 6px; }
+  #wave { width: 100%; height: 90px; display: block; background: var(--card2); border-radius: 10px; margin-top: 14px; }
+  .status-row { display: flex; justify-content: space-between; margin-top: 12px; font-size: 0.8rem; }
+  .status-row .k { color: var(--muted); }
+  .badge { padding: 2px 10px; border-radius: 20px; font-weight: 600; font-size: 0.75rem; }
+  .badge.good { background: rgba(61,220,151,0.15); color: var(--good); }
+  .badge.warn { background: rgba(255,200,87,0.15); color: var(--warn); }
+  .badge.bad  { background: rgba(255,93,115,0.15); color: var(--bad); }
+  button.primary {
+    width: 100%; padding: 16px; border: none; border-radius: 12px;
+    background: var(--accent); color: #fff; font-size: 1.05rem; font-weight: 700;
+    cursor: pointer; margin-top: 4px;
+  }
+  button.primary:disabled { opacity: 0.5; }
+  button.primary.stop { background: #33415e; }
+  progress { width: 100%; height: 6px; margin-top: 12px; accent-color: var(--accent); border-radius: 3px; }
+  .instructions { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+  .instructions li { margin: 4px 0 4px 18px; }
+  h2 { font-size: 0.9rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .result-item { background: var(--card2); border-radius: 10px; padding: 10px 12px; }
+  .result-item .v { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .result-item .k { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+  #history .entry {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid #223252; font-size: 0.85rem;
+  }
+  #history .entry:last-child { border-bottom: none; }
+  #history .entry .t { color: var(--muted); font-size: 0.72rem; }
+  #video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .hidden { display: none; }
+  footer { text-align: center; color: var(--muted); font-size: 0.68rem; padding: 14px 0 6px; }
+</style>
+</head>
+<body>
+<header><h1>SIRONY POCKET HEALTH LAB</h1><span>Core prototype v0.1</span></header>
+<div class="disclaimer">
+  <b>Experimental — not a medical device.</b> Camera-PPG heart rate is an
+  evidence Class B measurement on unvalidated hardware (tier T0). For
+  research and development only. Do not use for medical decisions.
+</div>
+
+<div class="card" id="setupCard">
+  <h2>Measure heart rate with your camera</h2>
+  <ul class="instructions">
+    <li>Cover the <b>rear camera lens and flash</b> completely with your fingertip.</li>
+    <li>Press gently — too much pressure blocks blood flow.</li>
+    <li>Hold still for 30 seconds.</li>
+    <li>On a laptop: cover the webcam with your fingertip with a lamp shining through it.</li>
+  </ul>
+  <button class="primary" id="startBtn">Start measurement</button>
+</div>
+
+<div class="card hidden" id="liveCard">
+  <div class="hr-display">
+    <div class="hr-value"><span id="hrLive">--</span><small> bpm</small></div>
+    <div class="hr-label" id="phaseLabel">Detecting finger…</div>
+  </div>
+  <canvas id="wave"></canvas>
+  <progress id="prog" max="30" value="0"></progress>
+  <div class="status-row"><span class="k">Finger contact</span><span class="badge bad" id="contactBadge">Not detected</span></div>
+  <div class="status-row"><span class="k">Signal quality</span><span class="badge bad" id="qualBadge">--</span></div>
+  <button class="primary stop" id="stopBtn">Cancel</button>
+</div>
+
+<div class="card hidden" id="resultCard">
+  <h2>Result</h2>
+  <div class="result-grid">
+    <div class="result-item"><div class="v" id="rHr">--</div><div class="k">Heart rate (bpm)</div></div>
+    <div class="result-item"><div class="v" id="rHrv">--</div><div class="k">HRV RMSSD (ms)</div></div>
+    <div class="result-item"><div class="v" id="rQual">--</div><div class="k">Signal quality</div></div>
+    <div class="result-item"><div class="v" id="rConf">--</div><div class="k">Confidence</div></div>
+  </div>
+  <p class="instructions" id="rInterp" style="margin-top:12px;"></p>
+  <button class="primary" id="againBtn" style="margin-top:12px;">Measure again</button>
+</div>
+
+<div class="card">
+  <h2>History &amp; personal baseline</h2>
+  <div id="baselineLine" class="instructions" style="margin-bottom:8px;">No baseline yet — take a few measurements.</div>
+  <div id="history"><div class="instructions">No measurements yet.</div></div>
+</div>
+
+<footer>SPHL Core · camera_ppg · algorithm v0.1.0 · data stays on this device (localStorage)</footer>
+<video id="video" autoplay playsinline muted></video>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------
+// SPHL Core prototype — camera PPG pipeline (blueprint section 5.1)
+// Camera frames -> ROI mean red -> detrend -> band-pass -> peaks
+// -> HR / IBI / RMSSD + signal quality gating (section 22)
+// ---------------------------------------------------------------
+const ALGO_VERSION = "0.1.0";
+const MEASURE_SECONDS = 30;
+const FS_TARGET = 30;                 // nominal frame rate
+const MIN_IBI_MS = 333, MAX_IBI_MS = 1500; // 40–180 bpm
+
+const $ = id => document.getElementById(id);
+const video = $("video");
+const waveCanvas = $("wave"), waveCtx = waveCanvas.getContext("2d");
+const grab = document.createElement("canvas");
+grab.width = 64; grab.height = 48;
+const grabCtx = grab.getContext("2d", { willReadFrequently: true });
+
+let stream = null, track = null, running = false, rafId = null;
+let samples = [];      // {t, r, g, b}
+let startTime = 0;
+
+// ---------- capture ----------
+async function startCapture() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment", width: { ideal: 640 }, frameRate: { ideal: FS_TARGET } },
+      audio: false
+    });
+  } catch (e) {
+    alert("Camera access failed: " + e.message +
+      "\n\nNote: camera requires HTTPS (or http://localhost).");
+    return false;
+  }
+  video.srcObject = stream;
+  track = stream.getVideoTracks()[0];
+  // Try to enable torch (Android Chrome). Fails silently elsewhere.
+  try {
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    if (caps.torch) await track.applyConstraints({ advanced: [{ torch: true }] });
+  } catch (_) {}
+  return true;
+}
+function stopCapture() {
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null; track = null;
+}
+
+// ---------- per-frame sampling ----------
+function sampleFrame() {
+  if (!running) return;
+  grabCtx.drawImage(video, 0, 0, grab.width, grab.height);
+  const d = grabCtx.getImageData(16, 12, 32, 24).data; // center ROI
+  let r = 0, g = 0, b = 0, n = d.length / 4;
+  for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i+1]; b += d[i+2]; }
+  r /= n; g /= n; b /= n;
+  const t = performance.now();
+  samples.push({ t, r, g, b });
+  const cutoff = t - 20000;
+  while (samples.length && samples[0].t < cutoff) samples.shift();
+  processTick(t);
+  rafId = requestAnimationFrame(sampleFrame);
+}
+
+// ---------- finger detection ----------
+function fingerDetected(s) {
+  // Finger over lens+light: red dominant and bright
+  return s.r > 60 && s.r > s.g * 1.4 && s.r > s.b * 1.4;
+}
+
+// ---------- signal processing ----------
+function movingAverage(arr, w) {
+  const out = new Array(arr.length);
+  let acc = 0;
+  for (let i = 0; i < arr.length; i++) {
+    acc += arr[i];
+    if (i >= w) acc -= arr[i - w];
+    out[i] = acc / Math.min(i + 1, w);
+  }
+  return out;
+}
+// Detrend (remove slow baseline) then smooth (remove noise) = crude band-pass
+function bandpass(values, fs) {
+  const slow = movingAverage(values, Math.max(3, Math.round(fs * 1.2)));
+  const det = values.map((v, i) => v - slow[i]);
+  return movingAverage(det, Math.max(2, Math.round(fs * 0.12)));
+}
+function detectPeaks(sig, times) {
+  const peaks = [];
+  const amp = Math.sqrt(sig.reduce((a, v) => a + v * v, 0) / sig.length); // RMS
+  const thr = amp * 0.6;
+  let lastPeakT = -Infinity;
+  for (let i = 2; i < sig.length - 2; i++) {
+    if (sig[i] > thr && sig[i] >= sig[i-1] && sig[i] >= sig[i+1] &&
+        sig[i] > sig[i-2] && sig[i] > sig[i+2]) {
+      if (times[i] - lastPeakT >= MIN_IBI_MS) { peaks.push(times[i]); lastPeakT = times[i]; }
+    }
+  }
+  return peaks;
+}
+function analyse() {
+  if (samples.length < FS_TARGET * 4) return null;
+  const times = samples.map(s => s.t);
+  const reds = samples.map(s => s.r);
+  const dur = (times[times.length-1] - times[0]) / 1000;
+  const fs = samples.length / dur;
+  const sig = bandpass(reds, fs);
+  const peaks = detectPeaks(sig, times);
+  const ibis = [];
+  for (let i = 1; i < peaks.length; i++) {
+    const ibi = peaks[i] - peaks[i-1];
+    if (ibi >= MIN_IBI_MS && ibi <= MAX_IBI_MS) ibis.push(ibi);
+  }
+  if (ibis.length < 4) return { sig, hr: null, quality: 0 };
+  const sorted = [...ibis].sort((a, b) => a - b);
+  const medIbi = sorted[Math.floor(sorted.length / 2)];
+  const hr = 60000 / medIbi;
+  // RMSSD
+  let ss = 0;
+  for (let i = 1; i < ibis.length; i++) ss += (ibis[i] - ibis[i-1]) ** 2;
+  const rmssd = Math.sqrt(ss / (ibis.length - 1));
+  // Quality: IBI regularity + valid-beat coverage + finger contact fraction
+  const meanIbi = ibis.reduce((a, v) => a + v, 0) / ibis.length;
+  const cv = Math.sqrt(ibis.reduce((a, v) => a + (v - meanIbi) ** 2, 0) / ibis.length) / meanIbi;
+  const regularity = Math.max(0, 1 - cv * 2.2);
+  const coverage = Math.min(1, (ibis.length * meanIbi) / (dur * 1000));
+  const contact = samples.filter(fingerDetected).length / samples.length;
+  const quality = Math.max(0, Math.min(1, 0.45 * regularity + 0.25 * coverage + 0.30 * contact));
+  return { sig, hr, rmssd, ibis, quality, contact };
+}
+
+// ---------- live UI ----------
+let lastResult = null;
+function processTick(now) {
+  const s = samples[samples.length - 1];
+  const contactOk = fingerDetected(s);
+  setBadge($("contactBadge"), contactOk ? "Good" : "Not detected", contactOk ? "good" : "bad");
+
+  const res = analyse();
+  lastResult = res;
+  if (res && res.hr && res.quality > 0.25) {
+    $("hrLive").textContent = Math.round(res.hr);
+    $("phaseLabel").textContent = "Measuring — hold still";
+  } else {
+    $("hrLive").textContent = "--";
+    $("phaseLabel").textContent = contactOk ? "Acquiring signal…" : "Cover the camera with your fingertip";
+  }
+  if (res) {
+    const q = res.quality;
+    setBadge($("qualBadge"), q > 0.7 ? "Good" : q > 0.4 ? "Fair" : "Poor",
+             q > 0.7 ? "good" : q > 0.4 ? "warn" : "bad");
+    drawWave(res.sig);
+  }
+  const elapsed = (now - startTime) / 1000;
+  $("prog").value = Math.min(MEASURE_SECONDS, elapsed);
+  if (elapsed >= MEASURE_SECONDS) finishMeasurement();
+}
+function setBadge(el, text, cls) { el.textContent = text; el.className = "badge " + cls; }
+function drawWave(sig) {
+  const W = waveCanvas.width = waveCanvas.clientWidth * devicePixelRatio;
+  const H = waveCanvas.height = 90 * devicePixelRatio;
+  waveCtx.clearRect(0, 0, W, H);
+  const view = sig.slice(-Math.floor(sig.length * 0.6));
+  if (view.length < 2) return;
+  let mn = Infinity, mx = -Infinity;
+  for (const v of view) { if (v < mn) mn = v; if (v > mx) mx = v; }
+  const span = (mx - mn) || 1;
+  waveCtx.beginPath();
+  waveCtx.strokeStyle = "#ff5d73"; waveCtx.lineWidth = 2 * devicePixelRatio;
+  view.forEach((v, i) => {
+    const x = (i / (view.length - 1)) * W;
+    const y = H - ((v - mn) / span) * (H * 0.8) - H * 0.1;
+    i ? waveCtx.lineTo(x, y) : waveCtx.moveTo(x, y);
+  });
+  waveCtx.stroke();
+}
+
+// ---------- lifecycle ----------
+async function start() {
+  $("startBtn").disabled = true;
+  if (!(await startCapture())) { $("startBtn").disabled = false; return; }
+  samples = []; running = true; startTime = performance.now();
+  $("setupCard").classList.add("hidden");
+  $("resultCard").classList.add("hidden");
+  $("liveCard").classList.remove("hidden");
+  $("startBtn").disabled = false;
+  rafId = requestAnimationFrame(sampleFrame);
+}
+function stop() {
+  running = false;
+  if (rafId) cancelAnimationFrame(rafId);
+  stopCapture();
+  $("liveCard").classList.add("hidden");
+  $("setupCard").classList.remove("hidden");
+}
+function finishMeasurement() {
+  const res = lastResult;
+  running = false;
+  if (rafId) cancelAnimationFrame(rafId);
+  stopCapture();
+  $("liveCard").classList.add("hidden");
+
+  if (!res || !res.hr || res.quality < 0.3) {
+    // Blueprint section 22: "I don't have enough reliable data" is a feature.
+    $("resultCard").classList.remove("hidden");
+    $("rHr").textContent = "--"; $("rHrv").textContent = "--";
+    $("rQual").textContent = "Poor"; $("rConf").textContent = "Low";
+    $("rInterp").textContent =
+      "Not enough reliable signal. Possible causes: poor finger contact, movement, low light. " +
+      "Nothing was saved. Please repeat the measurement.";
+    return;
+  }
+  const hr = Math.round(res.hr);
+  const rmssd = Math.round(res.rmssd);
+  const quality = res.quality;
+  const confidence = Math.min(1, quality * 1.05);
+  const record = {
+    measurement_id: crypto.randomUUID(),
+    measurement_type: "heart_rate", value: hr, unit: "bpm",
+    hrv_rmssd_ms: rmssd,
+    source: "camera_ppg", evidence_class: "B", tier: "T0",
+    signal_quality: +quality.toFixed(2), confidence: +confidence.toFixed(2),
+    algorithm_version: ALGO_VERSION, timestamp: new Date().toISOString()
+  };
+  const hist = loadHistory();
+  hist.push(record);
+  localStorage.setItem("sphl_history", JSON.stringify(hist));
+
+  $("resultCard").classList.remove("hidden");
+  $("rHr").textContent = hr;
+  $("rHrv").textContent = rmssd;
+  $("rQual").textContent = quality > 0.7 ? "Good" : quality > 0.4 ? "Fair" : "Poor";
+  $("rConf").textContent = confidence > 0.7 ? "High" : confidence > 0.4 ? "Medium" : "Low";
+  $("rInterp").textContent = interpret(hr, hist);
+  renderHistory();
+}
+// Conservative interpretation layer (blueprint sections 23 and 26)
+function interpret(hr, hist) {
+  const base = baseline(hist.slice(0, -1));
+  if (!base) return "Recorded. Your personal baseline will form after a few measurements — deviations are then compared to YOUR normal, not population averages.";
+  const dev = Math.abs(hr - base.mean) / (base.sd || 5);
+  if (dev < 2) return `Within your personal baseline (${Math.round(base.mean)} ± ${Math.round(base.sd)} bpm). No significant deviation detected.`;
+  return `This reading deviates from your personal baseline (${Math.round(base.mean)} ± ${Math.round(base.sd)} bpm). ` +
+    "Repeat the measurement at rest. If the deviation persists or you have symptoms, consider medical evaluation. This is not a diagnosis.";
+}
+function baseline(hist) {
+  const vals = hist.filter(h => h.signal_quality >= 0.4).map(h => h.value);
+  if (vals.length < 3) return null;
+  const mean = vals.reduce((a, v) => a + v, 0) / vals.length;
+  const sd = Math.sqrt(vals.reduce((a, v) => a + (v - mean) ** 2, 0) / vals.length);
+  return { mean, sd: Math.max(sd, 3) };
+}
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem("sphl_history")) || []; }
+  catch (_) { return []; }
+}
+function renderHistory() {
+  const hist = loadHistory();
+  const el = $("history");
+  if (!hist.length) { el.innerHTML = '<div class="instructions">No measurements yet.</div>'; return; }
+  el.innerHTML = hist.slice(-8).reverse().map(h =>
+    `<div class="entry"><div><b>${h.value} bpm</b> · HRV ${h.hrv_rmssd_ms} ms
+     <span class="badge ${h.signal_quality > 0.7 ? "good" : h.signal_quality > 0.4 ? "warn" : "bad"}">q ${h.signal_quality}</span></div>
+     <div class="t">${new Date(h.timestamp).toLocaleString()}</div></div>`).join("");
+  const base = baseline(hist);
+  $("baselineLine").innerHTML = base
+    ? `Personal baseline: <b>${Math.round(base.mean)} ± ${Math.round(base.sd)} bpm</b> (${hist.length} measurements)`
+    : `No baseline yet — ${3 - hist.length > 0 ? 3 - hist.length : 0} more good measurements needed.`;
+}
+
+$("startBtn").addEventListener("click", start);
+$("stopBtn").addEventListener("click", stop);
+$("againBtn").addEventListener("click", start);
+renderHistory();
+</script>
+</body>
+</html>
