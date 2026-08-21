@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1220">
+<title>SPHL Module Console</title>
+<style>
+  :root { --bg:#0b1220; --card:#121c30; --card2:#182642; --text:#e8eefb; --muted:#8fa3c8;
+          --accent:#ff5d73; --blue:#4aa3ff; --good:#3ddc97; --warn:#ffc857; --bad:#ff5d73; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
+         max-width:560px; margin:0 auto; padding:14px; }
+  h1 { font-size:1.05rem; margin-bottom:2px; }
+  .sub { color:var(--muted); font-size:0.75rem; margin-bottom:12px; }
+  .card { background:var(--card); border-radius:14px; padding:14px; margin-bottom:10px; }
+  button { border:none; border-radius:14px; padding:16px; width:100%; font-size:1.05rem;
+           font-weight:800; cursor:pointer; font-family:inherit; color:#fff; background:var(--blue); }
+  button.stop { background:#33415e; }
+  button:disabled { opacity:0.5; }
+  canvas { width:100%; height:120px; background:var(--card2); border-radius:10px; display:block; }
+  .row { display:flex; gap:10px; }
+  .row .card { flex:1; text-align:center; }
+  .v { font-size:1.6rem; font-weight:800; font-variant-numeric:tabular-nums; }
+  .k { color:var(--muted); font-size:0.7rem; margin-top:2px; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:20px; font-weight:700; font-size:0.72rem; }
+  .badge.good { background:rgba(61,220,151,0.15); color:var(--good); }
+  .badge.bad { background:rgba(255,93,115,0.15); color:var(--bad); }
+  .badge.warn { background:rgba(255,200,87,0.15); color:var(--warn); }
+  .lbl { font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
+  #log { font-family:ui-monospace,monospace; font-size:0.7rem; color:var(--muted); white-space:pre-wrap; max-height:100px; overflow-y:auto; }
+  .warnbox { background:rgba(255,200,87,0.1); border:1px solid rgba(255,200,87,0.4); border-radius:10px;
+             padding:10px; font-size:0.75rem; color:var(--warn); margin-bottom:10px; }
+</style>
+</head>
+<body>
+<h1>⚙️ SPHL Module Console</h1>
+<div class="sub">Cardio Kit Prototype A · GATT v0.1 · <a href="/" style="color:var(--blue)">back to app</a></div>
+<div class="warnbox">T0 Experimental hardware — not for medical use. Battery power only while electrodes are attached. SpO₂ % is deliberately NOT computed (uncalibrated).</div>
+
+<button id="connectBtn">🔗 Connect SPHL module</button>
+<div class="card" id="devCard" style="display:none;">
+  <div class="lbl">Module</div>
+  <div id="devInfo" style="font-size:0.85rem;"></div>
+  <div style="margin-top:6px;">
+    <span class="badge bad" id="leadBadge">ECG leads: ?</span>
+    <span class="badge bad" id="fingerBadge">PPG finger: ?</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="lbl">ECG <span id="ecgHr" style="color:var(--accent);font-weight:800;"></span></div>
+  <canvas id="ecgCanvas"></canvas>
+</div>
+<div class="card">
+  <div class="lbl">PPG (IR)</div>
+  <canvas id="ppgCanvas"></canvas>
+</div>
+<div class="row">
+  <div class="card"><div class="v" id="tempV">--</div><div class="k">Skin temp °C</div></div>
+  <div class="card"><div class="v" id="redV">--</div><div class="k">PPG red</div></div>
+  <div class="card"><div class="v" id="irV">--</div><div class="k">PPG IR</div></div>
+</div>
+<button class="stop" id="exportBtn" disabled>💾 Export raw signals (JSON)</button>
+<div class="card" style="margin-top:10px;"><div class="lbl">Log</div><div id="log"></div></div>
+
+<script>
+"use strict";
+const SVC  = "a5b40001-9b1b-4b6e-8f6a-535048434b00";
+const CH = { desc:"a5b40002-9b1b-4b6e-8f6a-535048434b00", ecg:"a5b40003-9b1b-4b6e-8f6a-535048434b00",
+             ppg:"a5b40004-9b1b-4b6e-8f6a-535048434b00", temp:"a5b40005-9b1b-4b6e-8f6a-535048434b00",
+             stat:"a5b40006-9b1b-4b6e-8f6a-535048434b00" };
+const $ = id => document.getElementById(id);
+const log = m => { $("log").textContent = (new Date().toLocaleTimeString()) + " " + m + "\n" + $("log").textContent.slice(0, 2000); };
+
+let ecgData = [], ppgData = [], lastEcgSeq = null, drops = 0;
+const raw = { started: null, ecg: [], ppg: [], temp: [] };
+
+function drawTrace(canvas, data, color) {
+  const c = canvas, ctx = c.getContext("2d");
+  const W = c.width = c.clientWidth * devicePixelRatio;
+  const H = c.height = 120 * devicePixelRatio;
+  ctx.clearRect(0, 0, W, H);
+  if (data.length < 2) return;
+  let mn = Infinity, mx = -Infinity;
+  for (const v of data) { if (v < mn) mn = v; if (v > mx) mx = v; }
+  const span = (mx - mn) || 1;
+  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2 * devicePixelRatio;
+  data.forEach((v, i) => {
+    const x = i / (data.length - 1) * W;
+    const y = H - ((v - mn) / span) * (H * 0.84) - H * 0.08;
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  });
+  ctx.stroke();
+}
+// crude live HR from ECG peaks (display only)
+function ecgHr() {
+  if (ecgData.length < 500) return null;
+  const seg = ecgData.slice(-1250);                       // last 5 s @250 Hz
+  const mean = seg.reduce((a, v) => a + v, 0) / seg.length;
+  const d = seg.map(v => v - mean);
+  const amp = Math.sqrt(d.reduce((a, v) => a + v * v, 0) / d.length);
+  const peaks = [];
+  for (let i = 2; i < d.length - 2; i++)
+    if (d[i] > amp * 2 && d[i] >= d[i-1] && d[i] >= d[i+1] &&
+        (!peaks.length || i - peaks[peaks.length-1] > 83)) peaks.push(i);
+  if (peaks.length < 3) return null;
+  const ibis = [];
+  for (let i = 1; i < peaks.length; i++) ibis.push((peaks[i] - peaks[i-1]) * 4);
+  ibis.sort((a, b) => a - b);
+  return Math.round(60000 / ibis[Math.floor(ibis.length / 2)]);
+}
+
+async function connect() {
+  if (!navigator.bluetooth) {
+    alert("Web Bluetooth is not available in this browser. Use Chrome on Android or desktop Chrome. (iPhone Safari does not support Web Bluetooth.)");
+    return;
+  }
+  try {
+    const dev = await navigator.bluetooth.requestDevice({
+      filters: [{ namePrefix: "SPHL" }], optionalServices: [SVC]
+    });
+    log("connecting to " + dev.name + "…");
+    dev.addEventListener("gattserverdisconnected", () => { log("disconnected"); $("connectBtn").disabled = false; });
+    const gatt = await dev.gatt.connect();
+    const svc = await gatt.getPrimaryService(SVC);
+
+    const descCh = await svc.getCharacteristic(CH.desc);
+    const descRaw = await descCh.readValue();
+    const desc = JSON.parse(new TextDecoder().decode(descRaw));
+    $("devCard").style.display = "";
+    $("devInfo").textContent = `${desc.product_name} · fw ${desc.fw_version} · serial ${desc.serial} · tier ${desc.tier}`;
+    log("descriptor ok: " + desc.product_name);
+    raw.started = new Date().toISOString();
+
+    const sub = async (id, handler) => {
+      const ch = await svc.getCharacteristic(CH[id]);
+      await ch.startNotifications();
+      ch.addEventListener("characteristicvaluechanged", e => handler(e.target.value));
+    };
+    await sub("ecg", v => {
+      const seq = v.getUint16(0, true);
+      if (lastEcgSeq !== null && ((seq - lastEcgSeq) & 0xFFFF) !== 1) drops++;
+      lastEcgSeq = seq;
+      for (let i = 0; i < 8; i++) {
+        const s = v.getInt16(2 + i * 2, true);
+        ecgData.push(s); raw.ecg.push(s);
+      }
+      if (ecgData.length > 1250) ecgData = ecgData.slice(-1250);
+      if (raw.ecg.length > 150000) raw.ecg = raw.ecg.slice(-150000);
+    });
+    await sub("ppg", v => {
+      const red = v.getUint32(2, true), ir = v.getUint32(6, true);
+      $("redV").textContent = red; $("irV").textContent = ir;
+      ppgData.push(ir); raw.ppg.push({ red, ir });
+      if (ppgData.length > 300) ppgData = ppgData.slice(-300);
+      if (raw.ppg.length > 20000) raw.ppg = raw.ppg.slice(-20000);
+    });
+    await sub("temp", v => {
+      const c = v.getInt16(0, true) / 100;
+      $("tempV").textContent = c.toFixed(2);
+      raw.temp.push({ t: Date.now(), c });
+    });
+    await sub("stat", v => {
+      const st = v.getUint8(0);
+      $("leadBadge").className = "badge " + ((st & 1) ? "bad" : "good");
+      $("leadBadge").textContent = "ECG leads: " + ((st & 1) ? "OFF" : "on");
+      $("fingerBadge").className = "badge " + ((st & 2) ? "bad" : "good");
+      $("fingerBadge").textContent = "PPG finger: " + ((st & 2) ? "absent" : "on");
+    });
+    $("connectBtn").disabled = true;
+    $("exportBtn").disabled = false;
+    log("streaming (ECG 250 Hz, PPG 10 Hz, temp 1 Hz)");
+  } catch (e) { log("error: " + e.message); }
+}
+
+setInterval(() => {
+  drawTrace($("ecgCanvas"), ecgData, "#ff5d73");
+  drawTrace($("ppgCanvas"), ppgData, "#4aa3ff");
+  const hr = ecgHr();
+  $("ecgHr").textContent = (hr ? "· " + hr + " bpm" : "") + (drops ? " · drops " + drops : "");
+}, 150);
+
+$("connectBtn").addEventListener("click", connect);
+$("exportBtn").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify({
+    device: "SPHL Cardio ProtoA", exported: new Date().toISOString(),
+    started: raw.started, ecg_hz: 250, ecg: raw.ecg, ppg_10hz: raw.ppg, temp: raw.temp,
+    note: "T0 experimental raw signals"
+  })], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "sphl-cardio-raw-" + Date.now() + ".json";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+});
+</script>
+</body>
+</html>
