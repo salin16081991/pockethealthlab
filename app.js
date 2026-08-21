@@ -7,7 +7,13 @@
 // personal baselines, data export, SOS.
 // Every measurement: signal-quality gated, class-B/A tagged, versioned.
 // =====================================================================
-const APP_VERSION = "0.3.1";
+const APP_VERSION = "0.4.0";
+// Typical resting adult reference ranges (population context, NOT diagnosis)
+const RANGES = {
+  heart_rate: [60, 100], respiratory_rate: [12, 20], reaction_time: [180, 380],
+  tap_count: [40, 80], sleep_hours: [7, 9], gait_cadence: [90, 125],
+  voice_pitch: [85, 255]
+};
 const PPG_ALGO = "0.2.2", RESP_ALGO = "0.1.0", MOTION_ALGO = "0.1.0",
       AUDIO_ALGO = "0.1.0";
 const MIN_IBI_MS = 333, MAX_IBI_MS = 1500;   // 40–180 bpm
@@ -95,6 +101,15 @@ en: {
   sos_name: "Emergency", sos_call: "Call 112",
   sos_text: "If someone is very unwell — severe chest pain, cannot breathe, collapsed — call emergency services now. Do not wait for app measurements.",
   tile_report: "Health report", tile_photos: "My photos", tile_sos: "EMERGENCY",
+  assess_name: "Full check",
+  assess_guide: "Three tests, one after another: heart, breathing, and voice. About two minutes. Follow the voice instructions.",
+  assess_ok: "Full check complete. No significant deviation detected. Measurement quality noted with each result.",
+  assess_dev: n => `Full check complete. ${n} result${n > 1 ? "s" : ""} deviate from your normal or the typical range. Rest 5 minutes and repeat the check. If you feel unwell, see a health worker.`,
+  not_measured: "Not measured",
+  typical: "Typical adult range",
+  range_in: "In the typical adult range. Your personal normal builds after 3 measurements.",
+  range_out: "Outside the typical adult range. This alone is not a diagnosis — rest, measure again, and if it repeats, mention it to a health worker.",
+  share: "Share report", share_head: "My SPHL health summary", copied: "Copied — paste it anywhere.",
 },
 hi: {
   voice: "hi-IN",
@@ -174,6 +189,15 @@ hi: {
   sos_name: "आपातकाल", sos_call: "112 पर कॉल करें",
   sos_text: "अगर कोई बहुत बीमार है — तेज़ सीने में दर्द, साँस नहीं ले पा रहे, बेहोश — तुरंत आपातकालीन सेवा को कॉल करें। ऐप की जाँच का इंतज़ार न करें।",
   tile_report: "स्वास्थ्य रिपोर्ट", tile_photos: "मेरी फोटो", tile_sos: "आपातकाल",
+  assess_name: "पूरी जाँच",
+  assess_guide: "तीन जाँचें एक के बाद एक: दिल, साँस और आवाज़। लगभग दो मिनट। आवाज़ के निर्देशों का पालन करें।",
+  assess_ok: "पूरी जाँच हो गई। कोई खास बदलाव नहीं मिला। हर परिणाम के साथ जाँच की गुणवत्ता दी गई है।",
+  assess_dev: n => `पूरी जाँच हो गई। ${n} परिणाम आपकी सामान्य या आम सीमा से अलग हैं। 5 मिनट आराम करके फिर जाँचें। तबीयत ठीक न लगे तो स्वास्थ्य कर्मी से मिलें।`,
+  not_measured: "जाँच नहीं हुई",
+  typical: "आम वयस्क सीमा",
+  range_in: "आम वयस्क सीमा में। 3 जाँच के बाद आपकी अपनी सामान्य सीमा बनेगी।",
+  range_out: "आम वयस्क सीमा से बाहर। यह अकेले कोई बीमारी नहीं बताता — आराम करके फिर जाँचें, बार-बार हो तो स्वास्थ्य कर्मी को बताएँ।",
+  share: "रिपोर्ट भेजें", share_head: "मेरा SPHL स्वास्थ्य सारांश", copied: "कॉपी हो गया — कहीं भी पेस्ट करें।",
 }
 };
 let LANG = localStorage.getItem("sphl_lang");
@@ -330,6 +354,7 @@ function savePhoto(p) {
 // ------------------------------------------------ test registry / tiles
 // kind: ppg | motion | audio | react | taps | photo | sleep | report | gallery | sos
 const TESTS = [
+  { id: "assess", em: "🩺", kind: "assess" },
   { id: "heart",  em: "❤️", kind: "ppg" },
   { id: "breath", em: "🫁", kind: "motion", secs: 45,
     band: [6.0, 0.5], gapMs: MIN_BR_MS, maxMs: MAX_BR_MS, type: "respiratory_rate",
@@ -380,9 +405,17 @@ let lastCueState = null, lastCueAt = 0;
 const waveCanvas = $("wave"), waveCtx = waveCanvas.getContext("2d");
 const RING_LEN = 597;
 
+// ---- full assessment flow (blueprint's 3-minute multimodal example) ----
+let ASSESS = { active: false, queue: [], results: [] };
 function openTest(t) {
   CUR = t;
   shutup();
+  if (t.kind === "assess") {
+    ASSESS = { active: true, queue: ["breath", "voice"], results: [] };
+    speak(T().assess_guide);
+    openTest(TESTS.find(x => x.id === "heart"));
+    return;
+  }
   if (t.kind === "react") { reactInit(); show("scr-react"); speak(T().react_guide); return; }
   if (t.kind === "taps") { tapsInit(); show("scr-taps"); speak(T().taps_guide); return; }
   if (t.kind === "photo") { photoInit(); show("scr-photo"); return; }
@@ -761,7 +794,41 @@ function teardown() {
   if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
   stopCapture(); stopMotion(); stopAudio();
 }
-function cancelMeasurement() { teardown(); shutup(); show("scr-home"); }
+function cancelMeasurement() { teardown(); shutup(); ASSESS.active = false; show("scr-home"); }
+function assessNext(entry) {
+  ASSESS.results.push(entry);
+  if (ASSESS.queue.length) {
+    const nid = ASSESS.queue.shift();
+    setTimeout(() => openTest(TESTS.find(x => x.id === nid)), 400);
+  } else {
+    ASSESS.active = false;
+    renderAssess();
+  }
+}
+function deviates(type, value, hist) {
+  const base = baseline(hist, type);
+  if (base) return Math.abs(value - base.mean) / base.sd >= 2;
+  const rng = RANGES[type];
+  return rng ? (value < rng[0] || value > rng[1]) : false;
+}
+function renderAssess() {
+  const hist = loadHistory();
+  let dev = 0;
+  $("assessList").innerHTML = ASSESS.results.map(e => {
+    if (e.value === null)
+      return `<div class="rep-row"><span>${e.em} ${T()[e.id + "_name"]}</span><span class="muted">${T().not_measured}</span></div>`;
+    const bad = deviates(e.type, e.value, hist);
+    if (bad) dev++;
+    return `<div class="rep-row"><span>${e.em} <b>${e.value}</b> ${e.unit}</span>
+      <span class="badge ${bad ? "warn" : "good"}">${bad ? "!" : "✓"}</span></div>`;
+  }).join("");
+  const msg = dev === 0 ? T().assess_ok : T().assess_dev(dev);
+  $("assessMsg").textContent = msg;
+  renderHistory();
+  show("scr-assess");
+  buzz(dev ? [250, 100, 250] : [80, 60, 80]);
+  speak(msg);
+}
 
 const ICON_OK = '<svg width="84" height="84" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="rgba(61,220,151,0.15)"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#3ddc97" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_RETRY = '<svg width="84" height="84" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="rgba(255,200,87,0.15)"/><path d="M12 6.5V4l-3.2 3 3.2 3V7.7a4.3 4.3 0 1 1-4.3 4.3H6a6 6 0 1 0 6-5.5z" fill="#ffc857"/></svg>';
@@ -781,9 +848,11 @@ function finishSensorTest() {
   // cough with 0 coughs is a VALID result (quiet recording)
   const invalid = !res || res.value === null || (res.quality < minQ && t.id !== "cough");
   if (invalid) {
+    if (ASSESS.active) { assessNext({ id: t.id, em: t.em || "❤️", value: null }); return; }
     $("resultIcon").innerHTML = ICON_RETRY;
     $("rHr").textContent = "--";
     $("rExtra").textContent = "--"; $("rQual").textContent = T().q_poor;
+    $("rRange").textContent = "";
     $("rMsg").textContent = T()[t.id + "_fail"];
     show("scr-result");
     speak(T()[t.id + "_fail"]);
@@ -802,21 +871,27 @@ function finishSensorTest() {
   const hist = loadHistory();
   const base = baseline(hist, type);
   saveRecord(makeRecord(type, rounded, unitMap[type], source, algo, quality, extra));
+  if (ASSESS.active) {
+    assessNext({ id: t.id, em: t.em || "❤️", value: rounded, unit: unitMap[type], type });
+    return;
+  }
 
   $("rHr").textContent = rounded;
   $("rExtra").textContent = isHeart ? (res.rmssd !== null ? Math.round(res.rmssd) : "--")
     : (res.extra !== undefined ? res.extra : "--");
   $("rQual").textContent = quality > 0.7 ? T().q_good : quality > 0.4 ? T().q_fair : T().q_poor;
 
-  let msg, vmsg, ok = true;
-  const baselined = ["heart_rate", "respiratory_rate", "gait_cadence", "voice_pitch"].includes(type);
-  if (!baselined) { msg = T().r_first; vmsg = ""; }
-  else if (!base) { msg = T().r_first; vmsg = ""; }
-  else {
+  let msg, vmsg = "", ok = true;
+  const rng = RANGES[type];
+  if (base) {
     const dev = Math.abs(rounded - base.mean) / base.sd;
     if (dev < 2) { msg = T().r_normal; vmsg = T().v_done_normal; }
     else { msg = T().r_dev; vmsg = T().v_done_dev; ok = false; }
-  }
+  } else if (rng) {
+    if (rounded >= rng[0] && rounded <= rng[1]) { msg = T().range_in; vmsg = T().v_done_normal; }
+    else { msg = T().range_out; ok = false; }
+  } else { msg = T().r_first; }
+  $("rRange").textContent = rng ? `${T().typical}: ${rng[0]}–${rng[1]}` : "";
   $("resultIcon").innerHTML = ok ? ICON_OK : ICON_RETRY;
   $("rMsg").textContent = msg;
   renderHistory();
@@ -875,8 +950,11 @@ function reactFinish() {
   $("rHr").textContent = median;
   $("rExtra").textContent = best;
   $("rQual").textContent = T().q_good;
-  $("resultIcon").innerHTML = ICON_OK;
-  $("rMsg").textContent = T().r_first;
+  const rrng = RANGES.reaction_time;
+  const rok = median >= rrng[0] && median <= rrng[1];
+  $("rRange").textContent = `${T().typical}: ${rrng[0]}–${rrng[1]}`;
+  $("resultIcon").innerHTML = rok ? ICON_OK : ICON_RETRY;
+  $("rMsg").textContent = rok ? T().range_in : T().range_out;
   CUR = TESTS.find(t => t.id === "react");
   renderHistory();
   show("scr-result");
@@ -917,8 +995,11 @@ function tapsFinish() {
   $("rHr").textContent = ts.count;
   $("rExtra").textContent = rhythm;
   $("rQual").textContent = T().q_good;
-  $("resultIcon").innerHTML = ICON_OK;
-  $("rMsg").textContent = T().r_first;
+  const trng = RANGES.tap_count;
+  const tok = ts.count >= trng[0] && ts.count <= trng[1];
+  $("rRange").textContent = `${T().typical}: ${trng[0]}–${trng[1]}`;
+  $("resultIcon").innerHTML = tok ? ICON_OK : ICON_RETRY;
+  $("rMsg").textContent = tok ? T().range_in : T().range_out;
   CUR = TESTS.find(t => t.id === "taps");
   renderHistory();
   show("scr-result");
@@ -1004,6 +1085,15 @@ const REPORT_DOMAINS = [
   { key: "rep_voice",  types: [["voice_pitch", "🎙️"]] },
   { key: "rep_sleep",  types: [["sleep_hours", "😴"]] },
 ];
+function sparkline(vals) {
+  if (vals.length < 2) return "";
+  const w = 64, h = 20;
+  let mn = Math.min(...vals), mx = Math.max(...vals);
+  if (mx - mn < 1e-9) { mn -= 1; mx += 1; }
+  const pts = vals.map((v, i) =>
+    `${(i / (vals.length - 1) * (w - 4) + 2).toFixed(1)},${(h - 3 - (v - mn) / (mx - mn) * (h - 6)).toFixed(1)}`).join(" ");
+  return `<svg width="${w}" height="${h}" style="vertical-align:middle"><polyline points="${pts}" fill="none" stroke="#4aa3ff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
 function renderReport() {
   const hist = loadHistory();
   const el = $("reportBody");
@@ -1021,15 +1111,37 @@ function renderReport() {
         const dev = Math.abs(last.value - base.mean) / base.sd;
         flag = dev >= 2 ? ` <span class="badge warn">!</span>` : ` <span class="badge good">✓</span>`;
         flag += ` <span class="muted" style="font-size:0.75rem">${T().rep_baseline} ${Math.round(base.mean * 10) / 10}</span>`;
+      } else if (RANGES[type]) {
+        const [lo, hi] = RANGES[type];
+        flag = (last.value < lo || last.value > hi)
+          ? ` <span class="badge warn">!</span>` : ` <span class="badge good">✓</span>`;
+        flag += ` <span class="muted" style="font-size:0.75rem">${lo}–${hi}</span>`;
       }
+      const trend = sparkline(recs.slice(-10).map(r => r.value));
       rows.push(`<div class="rep-row"><span>${em} <b>${last.value}</b> ${last.unit}${flag}</span>
-        <span class="muted" style="font-size:0.72rem">${new Date(last.timestamp).toLocaleDateString()}</span></div>`);
+        <span>${trend} <span class="muted" style="font-size:0.72rem">${new Date(last.timestamp).toLocaleDateString()}</span></span></div>`);
     }
     if (rows.length) html += `<div class="rep-domain">${T()[dom.key]}</div>` + rows.join("");
   }
   const nPhotos = loadPhotos().length;
   if (nPhotos) html += `<div class="rep-domain">${T().rep_photos}</div><div class="rep-row"><span>🖼️ ${nPhotos}</span></div>`;
   el.innerHTML = html || `<div class="step-sub">${T().report_none}</div>`;
+}
+function shareReport() {
+  const hist = loadHistory();
+  const lines = [T().share_head, new Date().toLocaleDateString(), ""];
+  for (const dom of REPORT_DOMAINS) {
+    for (const [type, em] of dom.types) {
+      const recs = hist.filter(h => h.measurement_type === type);
+      if (!recs.length) continue;
+      const last = recs[recs.length - 1];
+      lines.push(`${em} ${last.value} ${last.unit} (${new Date(last.timestamp).toLocaleDateString()})`);
+    }
+  }
+  lines.push("", T().disclaimer, "https://pockethealthlab.sirony.in");
+  const text = lines.join("\n");
+  if (navigator.share) navigator.share({ text }).catch(() => {});
+  else if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => alert(T().copied));
 }
 function exportData() {
   const payload = {
@@ -1107,6 +1219,9 @@ $("sleepSave").addEventListener("click", sleepSave);
 $("sleepBack").addEventListener("click", () => { shutup(); show("scr-home"); });
 $("reportBack").addEventListener("click", () => show("scr-home"));
 $("exportBtn").addEventListener("click", exportData);
+$("shareBtn").addEventListener("click", shareReport);
+$("assessShare").addEventListener("click", shareReport);
+$("assessDone").addEventListener("click", () => { shutup(); show("scr-home"); });
 $("sosBack").addEventListener("click", () => show("scr-home"));
 
 // PWA

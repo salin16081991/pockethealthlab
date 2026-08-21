@@ -246,6 +246,7 @@
       <div class="mini"><div class="v" id="rExtra">--</div><div class="k" id="rExtraLabel"></div></div>
       <div class="mini"><div class="v" id="rQual">--</div><div class="k" data-i18n="quality"></div></div>
     </div>
+    <div class="step-sub" id="rRange" style="margin-top:10px;"></div>
   </div>
   <div class="stack">
     <button class="bigbtn" id="againBtn">
@@ -322,8 +323,20 @@
   <div class="step-title" data-i18n="report_name"></div>
   <div class="card" id="reportBody" style="flex:1; overflow-y:auto;"></div>
   <div class="stack">
-    <button class="bigbtn blue" id="exportBtn">📤 <span data-i18n="export"></span></button>
+    <button class="bigbtn blue" id="shareBtn">💬 <span data-i18n="share"></span></button>
+    <button class="bigbtn secondary" id="exportBtn">📤 <span data-i18n="export"></span></button>
     <button class="bigbtn secondary" id="reportBack" data-i18n="back"></button>
+  </div>
+</section>
+
+<!-- ASSESSMENT SUMMARY -->
+<section class="screen" id="scr-assess">
+  <div class="step-title" data-i18n="assess_name"></div>
+  <div class="card" id="assessList"></div>
+  <div class="result-msg" id="assessMsg"></div>
+  <div class="stack">
+    <button class="bigbtn blue" id="assessShare">📤 <span data-i18n="share"></span></button>
+    <button class="bigbtn green" id="assessDone" data-i18n="done"></button>
   </div>
 </section>
 
