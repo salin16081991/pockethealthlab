@@ -163,9 +163,9 @@
       <circle id="flashGlow" cx="112" cy="52" r="7" fill="#ffc857"/>
       <!-- fingertip pressing camera -->
       <g id="fingerGroup">
-        <ellipse cx="120" cy="70" rx="34" ry="42" fill="#e8a87c" transform="rotate(-35 120 70)"/>
-        <ellipse cx="118" cy="66" rx="20" ry="26" fill="#f2bd94" transform="rotate(-35 118 66)"/>
-        <path d="M140 30 Q175 -5 205 25 L160 95 Z" fill="#e8a87c"/>
+        <ellipse cx="124" cy="86" rx="30" ry="38" fill="#e8a87c" transform="rotate(-35 124 86)"/>
+        <ellipse cx="120" cy="80" rx="18" ry="24" fill="#f2bd94" transform="rotate(-35 120 80)"/>
+        <path d="M144 50 Q180 15 208 45 L164 112 Z" fill="#e8a87c"/>
       </g>
       <!-- pulse line below -->
       <path d="M20 190 h55 l8 -14 10 26 9 -18 6 6 h112" stroke="#ff5d73" stroke-width="4" fill="none" stroke-linecap="round"/>
@@ -247,7 +247,7 @@ const I18N = {
     voice: "en-IN",
     measure_now: "Check my heart", history_title: "My measurements",
     guide_title: "Cover the camera",
-    guide_text: "The light on the back will turn ON. Cover the glowing light and the big camera next to it with one fingertip. If the phone says finger not found, slide your finger slowly until it says Good.",
+    guide_text: "The light on the back will turn ON — leave it open, do not cover it. Cover only ONE camera circle fully with your fingertip. If the phone says finger not found, slide your finger to the next camera circle until it says Good.",
     start: "Start", back: "Back", cancel: "Stop", bpm: "heartbeats per minute",
     result_title: "Your result", hrv: "Heart rhythm variation (ms)", quality: "Measurement quality",
     again: "Measure again", done: "Done",
@@ -257,9 +257,9 @@ const I18N = {
     baseline_none: "Your normal range will appear after 3 good measurements.",
     baseline_line: (m, s) => `Your normal: ${m} ± ${s} beats per minute`,
     v_welcome: "Welcome to Sirony Pocket Health Lab.",
-    v_guide: "The light on the back of your phone will turn on. Cover that light and the big camera next to it with one fingertip. Press softly. If I say finger not found, slide your finger slowly until I say good.",
+    v_guide: "The light on the back of your phone will turn on. Do not cover the light. Cover only one camera circle fully with your fingertip and press softly. If I say finger not found, slide your finger to the next camera circle until I say good.",
     v_started: "Measuring. Keep your finger still for thirty seconds.",
-    v_finger_lost: "Finger not found. Slide your fingertip slowly over the cameras until I say good.",
+    v_finger_lost: "Finger not found. Slide your fingertip to the next camera circle until I say good.",
     v_finger_ok: "Good. Hold still.",
     v_done_ok: hr => `Done. Your heart rate is ${hr} beats per minute.`,
     v_done_normal: "This is within your normal range.",
@@ -274,7 +274,7 @@ const I18N = {
     voice: "hi-IN",
     measure_now: "दिल की जाँच करें", history_title: "मेरी जाँचें",
     guide_title: "कैमरे को ढकें",
-    guide_text: "पीछे की लाइट जल जाएगी। जलती लाइट और उसके पास वाले बड़े कैमरे को एक उंगली से ढकें। अगर फोन कहे उंगली नहीं मिली, तो उंगली धीरे-धीरे खिसकाएँ जब तक फोन कहे बहुत अच्छा।",
+    guide_text: "पीछे की लाइट जल जाएगी — लाइट को न ढकें। सिर्फ एक कैमरे के गोले को उंगली से पूरा ढकें। अगर फोन कहे उंगली नहीं मिली, तो उंगली अगले कैमरे के गोले पर खिसकाएँ जब तक फोन कहे बहुत अच्छा।",
     start: "शुरू करें", back: "वापस", cancel: "रोकें", bpm: "धड़कन प्रति मिनट",
     result_title: "आपका परिणाम", hrv: "धड़कन में बदलाव (ms)", quality: "जाँच की गुणवत्ता",
     again: "फिर से जाँचें", done: "पूरा हुआ",
@@ -284,9 +284,9 @@ const I18N = {
     baseline_none: "3 अच्छी जाँच के बाद आपकी सामान्य सीमा दिखेगी।",
     baseline_line: (m, s) => `आपकी सामान्य धड़कन: ${m} ± ${s} प्रति मिनट`,
     v_welcome: "सिरोनी पॉकेट हेल्थ लैब में आपका स्वागत है।",
-    v_guide: "आपके फोन के पीछे की लाइट जल जाएगी। उस जलती लाइट और उसके पास वाले बड़े कैमरे को एक उंगली से ढकें। हल्के से दबाएँ। अगर मैं कहूँ उंगली नहीं मिली, तो उंगली धीरे-धीरे खिसकाएँ जब तक मैं कहूँ बहुत अच्छा।",
+    v_guide: "आपके फोन के पीछे की लाइट जल जाएगी। लाइट को न ढकें। सिर्फ एक कैमरे के गोले को उंगली से पूरा ढकें और हल्के से दबाएँ। अगर मैं कहूँ उंगली नहीं मिली, तो उंगली अगले कैमरे के गोले पर खिसकाएँ जब तक मैं कहूँ बहुत अच्छा।",
     v_started: "जाँच शुरू। तीस सेकंड तक उंगली स्थिर रखें।",
-    v_finger_lost: "उंगली नहीं मिली। उंगली को कैमरों पर धीरे-धीरे खिसकाएँ जब तक मैं कहूँ बहुत अच्छा।",
+    v_finger_lost: "उंगली नहीं मिली। उंगली को अगले कैमरे के गोले पर खिसकाएँ जब तक मैं कहूँ बहुत अच्छा।",
     v_finger_ok: "बहुत अच्छा। स्थिर रहें।",
     v_done_ok: hr => `हो गया। आपकी धड़कन ${hr} प्रति मिनट है।`,
     v_done_normal: "यह आपकी सामान्य सीमा में है।",
@@ -301,7 +301,7 @@ const I18N = {
     voice: "ml-IN",
     measure_now: "ഹൃദയം പരിശോധിക്കുക", history_title: "എന്റെ പരിശോധനകൾ",
     guide_title: "ക്യാമറ മൂടുക",
-    guide_text: "പിന്നിലെ ലൈറ്റ് തെളിയും. തെളിയുന്ന ലൈറ്റും അതിനടുത്തുള്ള വലിയ ക്യാമറയും ഒരു വിരൽകൊണ്ട് മൂടുക. വിരൽ കാണുന്നില്ല എന്ന് ഫോൺ പറഞ്ഞാൽ, നല്ലത് എന്ന് പറയുന്നത് വരെ വിരൽ പതുക്കെ നീക്കുക.",
+    guide_text: "പിന്നിലെ ലൈറ്റ് തെളിയും — ലൈറ്റ് മൂടരുത്. ഒരു ക്യാമറ വട്ടം മാത്രം വിരൽകൊണ്ട് പൂർണ്ണമായി മൂടുക. വിരൽ കാണുന്നില്ല എന്ന് ഫോൺ പറഞ്ഞാൽ, നല്ലത് എന്ന് പറയുന്നത് വരെ വിരൽ അടുത്ത ക്യാമറ വട്ടത്തിലേക്ക് നീക്കുക.",
     start: "തുടങ്ങുക", back: "മടങ്ങുക", cancel: "നിർത്തുക", bpm: "മിനിറ്റിൽ ഹൃദയമിടിപ്പ്",
     result_title: "നിങ്ങളുടെ ഫലം", hrv: "മിടിപ്പ് വ്യതിയാനം (ms)", quality: "പരിശോധനയുടെ നിലവാരം",
     again: "വീണ്ടും പരിശോധിക്കുക", done: "കഴിഞ്ഞു",
@@ -311,9 +311,9 @@ const I18N = {
     baseline_none: "3 നല്ല പരിശോധനകൾക്ക് ശേഷം നിങ്ങളുടെ സാധാരണ നില കാണാം.",
     baseline_line: (m, s) => `നിങ്ങളുടെ സാധാരണ മിടിപ്പ്: ${m} ± ${s} / മിനിറ്റ്`,
     v_welcome: "സിറോണി പോക്കറ്റ് ഹെൽത്ത് ലാബിലേക്ക് സ്വാഗതം.",
-    v_guide: "ഫോണിന്റെ പിന്നിലെ ലൈറ്റ് തെളിയും. ആ ലൈറ്റും അതിനടുത്തുള്ള വലിയ ക്യാമറയും ഒരു വിരൽകൊണ്ട് മൂടുക. പതുക്കെ അമർത്തുക. വിരൽ കാണുന്നില്ല എന്ന് ഞാൻ പറഞ്ഞാൽ, നല്ലത് എന്ന് പറയുന്നത് വരെ വിരൽ പതുക്കെ നീക്കുക.",
+    v_guide: "ഫോണിന്റെ പിന്നിലെ ലൈറ്റ് തെളിയും. ലൈറ്റ് മൂടരുത്. ഒരു ക്യാമറ വട്ടം മാത്രം വിരൽകൊണ്ട് പൂർണ്ണമായി മൂടി പതുക്കെ അമർത്തുക. വിരൽ കാണുന്നില്ല എന്ന് ഞാൻ പറഞ്ഞാൽ, നല്ലത് എന്ന് പറയുന്നത് വരെ വിരൽ അടുത്ത ക്യാമറ വട്ടത്തിലേക്ക് നീക്കുക.",
     v_started: "പരിശോധന തുടങ്ങി. മുപ്പത് സെക്കൻഡ് വിരൽ അനക്കരുത്.",
-    v_finger_lost: "വിരൽ കാണുന്നില്ല. നല്ലത് എന്ന് പറയുന്നത് വരെ വിരൽ ക്യാമറകളുടെ മുകളിൽ പതുക്കെ നീക്കുക.",
+    v_finger_lost: "വിരൽ കാണുന്നില്ല. നല്ലത് എന്ന് പറയുന്നത് വരെ വിരൽ അടുത്ത ക്യാമറ വട്ടത്തിലേക്ക് നീക്കുക.",
     v_finger_ok: "നല്ലത്. അനങ്ങാതിരിക്കുക.",
     v_done_ok: hr => `കഴിഞ്ഞു. നിങ്ങളുടെ ഹൃദയമിടിപ്പ് മിനിറ്റിൽ ${hr} ആണ്.`,
     v_done_normal: "ഇത് നിങ്ങളുടെ സാധാരണ നിലയിലാണ്.",
