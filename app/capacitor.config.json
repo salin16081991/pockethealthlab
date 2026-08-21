@@ -1,0 +1,12 @@
+{
+  "appId": "in.sirony.pockethealthlab",
+  "appName": "Sirony Pocket Health Lab",
+  "webDir": "www",
+  "backgroundColor": "#0b1220",
+  "ios": {
+    "contentInset": "automatic"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

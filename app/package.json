@@ -1,0 +1,19 @@
+{
+  "name": "sphl-app",
+  "version": "1.0.0",
+  "description": "Sirony Pocket Health Lab mobile app (Capacitor shell)",
+  "main": "index.js",
+  "scripts": {
+    "sync": "cp -r ../prototypes/sphl-core-web/. www/ && npx cap sync"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0"
+  }
+}
