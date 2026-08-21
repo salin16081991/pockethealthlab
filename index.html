@@ -262,7 +262,7 @@
 //   2. Respiratory rate  — phone-on-chest motion sensing (§9.1/§18)
 // Both use signal-quality gating and the personal baseline (§22–23).
 // =================================================================
-const PPG_ALGO = "0.1.0";
+const PPG_ALGO = "0.2.0";
 const RESP_ALGO = "0.1.0";
 const HEART_SECONDS = 30, BREATH_SECONDS = 45;
 const FS_TARGET = 30;
@@ -462,6 +462,12 @@ function stopCapture() {
   if (stream) stream.getTracks().forEach(t => t.stop());
   stream = null; track = null;
 }
+function scheduleFrame() {
+  // requestVideoFrameCallback samples once per real camera frame (no rAF duplicates)
+  if ("requestVideoFrameCallback" in HTMLVideoElement.prototype)
+    video.requestVideoFrameCallback(() => sampleFrame());
+  else rafId = requestAnimationFrame(sampleFrame);
+}
 function sampleFrame() {
   if (!running || MODE !== "heart") return;
   grabCtx.drawImage(video, 0, 0, grab.width, grab.height);
@@ -471,36 +477,84 @@ function sampleFrame() {
   r /= n; g /= n; b /= n;
   const t = performance.now();
   samples.push({ t, r, g, b });
-  while (samples.length && samples[0].t < t - 20000) samples.shift();
+  while (samples.length && samples[0].t < t - 25000) samples.shift();
   heartTick(t);
-  rafId = requestAnimationFrame(sampleFrame);
+  scheduleFrame();
 }
 function fingerDetected(s) { return s.r > 60 && s.r > s.g * 1.4 && s.r > s.b * 1.4; }
 
+// Autocorrelation over the physiological lag range: finds the dominant
+// repeating period. Robust against double-counted peaks, which inflate
+// simple peak-counting (the v0.1 failure mode).
+function autocorrHR(sig, fs) {
+  const n = sig.length;
+  const mean = sig.reduce((a, v) => a + v, 0) / n;
+  const x = sig.map(v => v - mean);
+  const e0 = x.reduce((a, v) => a + v * v, 0);
+  if (e0 === 0) return null;
+  const minLag = Math.max(2, Math.round(fs * MIN_IBI_MS / 1000));
+  const maxLag = Math.min(Math.round(fs * MAX_IBI_MS / 1000), n - 2);
+  if (maxLag <= minLag) return null;
+  let bestLag = -1, bestR = -1;
+  for (let lag = minLag; lag <= maxLag; lag++) {
+    let s = 0;
+    for (let i = 0; i < n - lag; i++) s += x[i] * x[i + lag];
+    const r = s / e0;
+    if (r > bestR) { bestR = r; bestLag = lag; }
+  }
+  if (bestLag < 0 || bestR <= 0) return null;
+  // Sub-harmonic guard: if double the period scores nearly as well, the true
+  // beat is the slower one (bestLag caught a half-period artifact).
+  const dbl = bestLag * 2;
+  if (dbl <= maxLag) {
+    let s = 0;
+    for (let i = 0; i < n - dbl; i++) s += x[i] * x[i + dbl];
+    if (s / e0 > bestR * 0.85) { bestLag = dbl; bestR = s / e0; }
+  }
+  return { hr: 60 * fs / bestLag, strength: bestR };
+}
 function analyseHeart() {
-  if (samples.length < FS_TARGET * 4) return null;
-  const times = samples.map(s => s.t);
-  const reds = samples.map(s => s.r);
-  const dur = (times[times.length-1] - times[0]) / 1000;
-  const fs = samples.length / dur;
-  const sig = bandpass(reds, fs, 1.2, 0.12);
+  // Discard the first 5 s (camera exposure/white-balance settling)
+  const useFrom = startTime + 5000;
+  const use = samples.filter(s => s.t >= useFrom);
+  if (use.length < FS_TARGET * 4) return null;
+  const times = use.map(s => s.t);
+  const dur = (times[times.length - 1] - times[0]) / 1000;
+  const fs = use.length / dur;
+  // Try red and green channels; ambient-light PPG (iPhone: no web torch)
+  // is often stronger in green. Pick whichever has the clearer periodicity.
+  let sig = null, ac = null;
+  for (const ch of ["r", "g"]) {
+    const s2 = bandpass(use.map(s => s[ch]), fs, 1.2, 0.12);
+    const a2 = autocorrHR(s2, fs);
+    if (a2 && (!ac || a2.strength > ac.strength)) { ac = a2; sig = s2; }
+  }
+  if (!ac) return { sig, hr: null, quality: 0 };
+  // Independent cross-check: peak-detected rate must agree with autocorrelation
   const peaks = detectPeaks(sig, times, MIN_IBI_MS, 0.6);
   const ibis = [];
   for (let i = 1; i < peaks.length; i++) {
-    const ibi = peaks[i] - peaks[i-1];
+    const ibi = peaks[i] - peaks[i - 1];
     if (ibi >= MIN_IBI_MS && ibi <= MAX_IBI_MS) ibis.push(ibi);
   }
-  if (ibis.length < 4) return { sig, hr: null, quality: 0 };
-  const { med, mean, cv } = intervalStats(ibis);
-  const hr = 60000 / med;
-  let ss = 0;
-  for (let i = 1; i < ibis.length; i++) ss += (ibis[i] - ibis[i-1]) ** 2;
-  const rmssd = Math.sqrt(ss / (ibis.length - 1));
-  const regularity = Math.max(0, 1 - cv * 2.2);
-  const coverage = Math.min(1, (ibis.length * mean) / (dur * 1000));
-  const contact = samples.filter(fingerDetected).length / samples.length;
-  const quality = Math.max(0, Math.min(1, 0.45 * regularity + 0.25 * coverage + 0.30 * contact));
-  return { sig, hr, rmssd, quality };
+  let agreement = 0, regularity = 0, rmssd = null, cv = 1;
+  if (ibis.length >= 4) {
+    const st = intervalStats(ibis);
+    cv = st.cv;
+    const hrP = 60000 / st.med;
+    agreement = Math.max(0, 1 - Math.abs(ac.hr - hrP) / ac.hr / 0.12);
+    regularity = Math.max(0, 1 - cv * 2.2);
+    let ss = 0;
+    for (let i = 1; i < ibis.length; i++) ss += (ibis[i] - ibis[i - 1]) ** 2;
+    rmssd = Math.sqrt(ss / (ibis.length - 1));
+  }
+  const contact = use.filter(fingerDetected).length / use.length;
+  const strengthNorm = Math.min(1, ac.strength / 0.6);
+  const quality = Math.max(0, Math.min(1,
+    0.35 * strengthNorm + 0.25 * agreement + 0.15 * regularity + 0.25 * contact));
+  // HRV is far more fragile than HR: report it only from a clean recording
+  const hrvOk = quality > 0.7 && cv < 0.2 && rmssd !== null && rmssd < 150;
+  return { sig, hr: ac.hr, rmssd: hrvOk ? rmssd : null, quality };
 }
 function heartTick(now) {
   const s = samples[samples.length - 1];
@@ -508,7 +562,7 @@ function heartTick(now) {
   updatePill(ok, ok ? T().v_finger_ok : T().v_finger_lost, now);
   const res = analyseHeart();
   lastResult = res;
-  $("hrLive").textContent = (res && res.hr && res.quality > 0.25) ? Math.round(res.hr) : "--";
+  $("hrLive").textContent = (res && res.hr && res.quality > 0.35) ? Math.round(res.hr) : "--";
   $("measureTitle").textContent = (res && res.hr) ? T().hold_still : T().measuring;
   if (res) drawWave(res.sig, "#ff5d73");
   progressTick(now);
@@ -651,7 +705,7 @@ async function startMeasurement() {
   show("scr-measure");
   $("startBtn").disabled = false;
   speak(MODE === "heart" ? T().v_started : T().v_bstarted);
-  if (MODE === "heart") rafId = requestAnimationFrame(sampleFrame);
+  if (MODE === "heart") scheduleFrame();
   else tickTimer = setInterval(breathTick, 250);
 }
 function teardown() {
@@ -676,7 +730,7 @@ function finishMeasurement() {
   $("unitResult").textContent = isHeart ? T().bpm : T().brpm;
   $("rExtraLabel").textContent = isHeart ? T().hrv : T().breaths_counted;
 
-  if (!res || !value || res.quality < (isHeart ? 0.3 : 0.25)) {
+  if (!res || !value || res.quality < (isHeart ? 0.5 : 0.25)) {
     $("resultIcon").innerHTML = ICON_RETRY;
     $("rHr").textContent = "--";
     $("rExtra").textContent = "--"; $("rQual").textContent = T().q_poor;
@@ -700,8 +754,8 @@ function finishMeasurement() {
     algorithm_version: isHeart ? PPG_ALGO : RESP_ALGO,
     timestamp: new Date().toISOString()
   };
-  if (isHeart) record.hrv_rmssd_ms = Math.round(res.rmssd);
-  else record.breaths_counted = res.breaths;
+  if (isHeart && res.rmssd !== null) record.hrv_rmssd_ms = Math.round(res.rmssd);
+  else if (!isHeart) record.breaths_counted = res.breaths;
 
   const hist = loadHistory();
   const base = baseline(hist, type);
@@ -709,7 +763,7 @@ function finishMeasurement() {
   localStorage.setItem("sphl_history", JSON.stringify(hist));
 
   $("rHr").textContent = rounded;
-  $("rExtra").textContent = isHeart ? Math.round(res.rmssd) : res.breaths;
+  $("rExtra").textContent = isHeart ? (res.rmssd !== null ? Math.round(res.rmssd) : "--") : res.breaths;
   $("rQual").textContent = quality > 0.7 ? T().q_good : quality > 0.4 ? T().q_fair : T().q_poor;
 
   let msg, vmsg, ok = true;
@@ -733,7 +787,11 @@ function loadHistory() {
   catch (_) { return []; }
 }
 function baseline(hist, type) {
-  const vals = hist.filter(h => (h.measurement_type || "heart_rate") === type && h.signal_quality >= 0.4)
+  // Heart baseline only trusts the current algorithm at good quality —
+  // this retires readings taken by the flawed v0.1 peak counter.
+  const vals = hist.filter(h => (h.measurement_type || "heart_rate") === type &&
+      (type !== "heart_rate" || (h.algorithm_version === PPG_ALGO && h.signal_quality >= 0.6)) &&
+      h.signal_quality >= 0.4)
                    .map(h => h.value);
   if (vals.length < 3) return null;
   const mean = vals.reduce((a, v) => a + v, 0) / vals.length;
