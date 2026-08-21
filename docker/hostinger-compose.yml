@@ -1,0 +1,11 @@
+# Paste this into Hostinger → VPS → Docker Manager → Compose
+# Project name: sphl
+# Requires the ghcr.io/salin16081991/sphl-web package to be public
+# (built automatically by .github/workflows/docker-image.yml on every push).
+services:
+  sphl-web:
+    image: ghcr.io/salin16081991/sphl-web:latest
+    container_name: sphl-web
+    ports:
+      - "8090:80"
+    restart: unless-stopped

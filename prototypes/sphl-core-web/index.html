@@ -9,130 +9,361 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SPHL">
-<title>SPHL Core — Camera PPG</title>
+<title>Sirony Pocket Health Lab</title>
 <style>
   :root {
     --bg: #0b1220; --card: #121c30; --card2: #182642;
     --text: #e8eefb; --muted: #8fa3c8; --accent: #ff5d73;
     --good: #3ddc97; --warn: #ffc857; --bad: #ff5d73;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
     background: var(--bg); color: var(--text);
-    font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-    min-height: 100vh; padding: 16px; max-width: 480px; margin: 0 auto;
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, "Noto Sans", sans-serif;
+    min-height: 100vh; max-width: 480px; margin: 0 auto; padding: 14px;
+    display: flex; flex-direction: column;
   }
-  header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
-  header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.02em; }
-  header span { color: var(--muted); font-size: 0.72rem; }
-  .disclaimer {
-    font-size: 0.7rem; color: var(--muted); background: var(--card);
-    border: 1px solid #223252; border-radius: 8px; padding: 8px 10px; margin: 10px 0 14px;
+  .screen { display: none; flex: 1; flex-direction: column; }
+  .screen.active { display: flex; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  header .brand { display: flex; align-items: center; gap: 10px; }
+  header img { width: 34px; height: 34px; border-radius: 9px; }
+  header h1 { font-size: 1rem; font-weight: 700; }
+  header .langbtn {
+    background: var(--card); color: var(--text); border: 1px solid #223252;
+    border-radius: 20px; padding: 6px 12px; font-size: 0.85rem; cursor: pointer;
   }
-  .disclaimer b { color: var(--warn); }
-  .card { background: var(--card); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
-  .hr-display { text-align: center; padding: 20px 16px; }
-  .hr-value { font-size: 4rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
-  .hr-value small { font-size: 1.1rem; font-weight: 500; color: var(--muted); }
-  .hr-label { color: var(--muted); font-size: 0.8rem; margin-top: 6px; }
-  #wave { width: 100%; height: 90px; display: block; background: var(--card2); border-radius: 10px; margin-top: 14px; }
-  .status-row { display: flex; justify-content: space-between; margin-top: 12px; font-size: 0.8rem; }
-  .status-row .k { color: var(--muted); }
+  .card { background: var(--card); border-radius: 16px; padding: 18px; margin-bottom: 12px; }
+  .bigbtn {
+    width: 100%; border: none; border-radius: 18px; cursor: pointer;
+    background: var(--accent); color: #fff; font-weight: 800;
+    font-size: 1.25rem; padding: 20px; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+  }
+  .bigbtn.secondary { background: #33415e; }
+  .bigbtn.green { background: var(--good); color: #06281a; }
+  .bigbtn svg { flex: 0 0 auto; }
+  .bigbtn:active { transform: scale(0.98); }
+  .stack { display: flex; flex-direction: column; gap: 12px; margin-top: auto; padding-bottom: 8px; }
+  .center { text-align: center; }
+  .muted { color: var(--muted); }
+  .step-title { font-size: 1.3rem; font-weight: 800; text-align: center; margin: 8px 0 4px; }
+  .step-sub { color: var(--muted); text-align: center; font-size: 0.95rem; line-height: 1.5; }
+  /* language screen */
+  .langlist { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
+  .langlist button {
+    background: var(--card); border: 2px solid #223252; color: var(--text);
+    border-radius: 18px; padding: 22px; font-size: 1.5rem; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+  }
+  .langlist button:active { border-color: var(--accent); }
+  /* illustration */
+  .illus { display: flex; justify-content: center; margin: 12px 0; }
+  @keyframes pressPulse { 0%,100% { transform: translate(0,0);} 50% { transform: translate(-14px,14px);} }
+  #fingerGroup { animation: pressPulse 2.2s ease-in-out infinite; }
+  @keyframes glow { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
+  #flashGlow { animation: glow 1.1s ease-in-out infinite; }
+  /* measuring screen */
+  .ring-wrap { position: relative; width: 230px; height: 230px; margin: 8px auto; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px;
+  }
+  .ring-center .hr { font-size: 3.2rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+  .ring-center .unit { color: var(--muted); font-size: 0.85rem; }
+  .contact-pill {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    border-radius: 14px; padding: 14px; font-size: 1.05rem; font-weight: 700;
+  }
+  .contact-pill.ok { background: rgba(61,220,151,0.15); color: var(--good); }
+  .contact-pill.no { background: rgba(255,93,115,0.15); color: var(--bad); }
+  #wave { width: 100%; height: 70px; display: block; background: var(--card2); border-radius: 10px; margin-top: 12px; }
+  /* result screen */
+  .result-icon { display: flex; justify-content: center; margin: 6px 0; }
+  .result-hr { font-size: 4.2rem; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
+  .result-unit { text-align: center; color: var(--muted); margin-bottom: 8px; }
+  .result-msg { text-align: center; font-size: 1.05rem; line-height: 1.55; padding: 0 6px; }
+  .mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .mini { background: var(--card2); border-radius: 12px; padding: 10px 12px; text-align: center; }
+  .mini .v { font-size: 1.15rem; font-weight: 700; }
+  .mini .k { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+  /* home */
+  .homebtn {
+    background: radial-gradient(circle at 35% 30%, #ff7d8f, var(--accent));
+    border: none; border-radius: 50%; width: 200px; height: 200px; margin: 22px auto;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    color: #fff; font-size: 1.2rem; font-weight: 800; cursor: pointer; font-family: inherit;
+    box-shadow: 0 0 0 14px rgba(255,93,115,0.10), 0 0 0 28px rgba(255,93,115,0.05);
+  }
+  .homebtn:active { transform: scale(0.97); }
+  @keyframes beat { 0%,100% { transform: scale(1);} 12% { transform: scale(1.12);} 24% { transform: scale(1);} }
+  .homebtn svg { animation: beat 1.6s infinite; }
+  #history .entry {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid #223252; font-size: 0.9rem;
+  }
+  #history .entry:last-child { border-bottom: none; }
+  #history .t { color: var(--muted); font-size: 0.72rem; }
   .badge { padding: 2px 10px; border-radius: 20px; font-weight: 600; font-size: 0.75rem; }
   .badge.good { background: rgba(61,220,151,0.15); color: var(--good); }
   .badge.warn { background: rgba(255,200,87,0.15); color: var(--warn); }
   .badge.bad  { background: rgba(255,93,115,0.15); color: var(--bad); }
-  button.primary {
-    width: 100%; padding: 16px; border: none; border-radius: 12px;
-    background: var(--accent); color: #fff; font-size: 1.05rem; font-weight: 700;
-    cursor: pointer; margin-top: 4px;
-  }
-  button.primary:disabled { opacity: 0.5; }
-  button.primary.stop { background: #33415e; }
-  progress { width: 100%; height: 6px; margin-top: 12px; accent-color: var(--accent); border-radius: 3px; }
-  .instructions { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
-  .instructions li { margin: 4px 0 4px 18px; }
-  h2 { font-size: 0.9rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .result-item { background: var(--card2); border-radius: 10px; padding: 10px 12px; }
-  .result-item .v { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .result-item .k { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
-  #history .entry {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 0; border-bottom: 1px solid #223252; font-size: 0.85rem;
-  }
-  #history .entry:last-child { border-bottom: none; }
-  #history .entry .t { color: var(--muted); font-size: 0.72rem; }
+  .disclaimer { font-size: 0.68rem; color: var(--muted); text-align: center; padding: 8px 4px; }
+  progress { width: 100%; height: 8px; accent-color: var(--accent); margin-top: 10px; }
   #video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-  .hidden { display: none; }
-  footer { text-align: center; color: var(--muted); font-size: 0.68rem; padding: 14px 0 6px; }
+  .speaker { vertical-align: -3px; margin-left: 6px; }
 </style>
 </head>
 <body>
-<header><h1>SIRONY POCKET HEALTH LAB</h1><span>Core prototype v0.1</span></header>
-<div class="disclaimer">
-  <b>Experimental — not a medical device.</b> Camera-PPG heart rate is an
-  evidence Class B measurement on unvalidated hardware (tier T0). For
-  research and development only. Do not use for medical decisions.
-</div>
 
-<div class="card" id="setupCard">
-  <h2>Measure heart rate with your camera</h2>
-  <ul class="instructions">
-    <li>Cover the <b>rear camera lens and flash</b> completely with your fingertip.</li>
-    <li>Press gently — too much pressure blocks blood flow.</li>
-    <li>Hold still for 30 seconds.</li>
-    <li>On a laptop: cover the webcam with your fingertip with a lamp shining through it.</li>
-  </ul>
-  <button class="primary" id="startBtn">Start measurement</button>
-</div>
+<!-- ============ LANGUAGE ============ -->
+<section class="screen" id="scr-lang">
+  <div class="center" style="margin-top:30px;">
+    <img src="icons/icon-192.png" width="72" height="72" style="border-radius:18px;">
+    <div class="step-title">Sirony Pocket Health Lab</div>
+  </div>
+  <div class="langlist">
+    <button data-lang="en">English</button>
+    <button data-lang="hi">हिन्दी</button>
+    <button data-lang="ml">മലയാളം</button>
+  </div>
+</section>
 
-<div class="card hidden" id="liveCard">
-  <div class="hr-display">
-    <div class="hr-value"><span id="hrLive">--</span><small> bpm</small></div>
-    <div class="hr-label" id="phaseLabel">Detecting finger…</div>
+<!-- ============ HOME ============ -->
+<section class="screen" id="scr-home">
+  <header>
+    <div class="brand"><img src="icons/icon-192.png" alt=""><h1>SPHL</h1></div>
+    <button class="langbtn" id="langSwitch">🌐</button>
+  </header>
+  <button class="homebtn" id="goMeasure">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="#fff"><path d="M12 21s-7.5-4.8-10-9.3C.4 8.7 2.2 5 5.8 5c2 0 3.4 1.1 4.2 2.4h4c.8-1.3 2.2-2.4 4.2-2.4 3.6 0 5.4 3.7 3.8 6.7C19.5 16.2 12 21 12 21z" transform="scale(0.9) translate(1.3,1.3)"/></svg>
+    <span data-i18n="measure_now"></span>
+  </button>
+  <div class="card">
+    <div style="font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;" data-i18n="history_title"></div>
+    <div id="baselineLine" class="muted" style="font-size:0.85rem;margin-bottom:6px;"></div>
+    <div id="history"></div>
+  </div>
+  <div class="disclaimer" data-i18n="disclaimer"></div>
+</section>
+
+<!-- ============ GUIDE ============ -->
+<section class="screen" id="scr-guide">
+  <div class="step-title" data-i18n="guide_title"></div>
+  <div class="illus">
+    <svg width="240" height="220" viewBox="0 0 240 220" fill="none">
+      <!-- phone (back) -->
+      <rect x="60" y="20" width="120" height="185" rx="18" fill="#182642" stroke="#33415e" stroke-width="3"/>
+      <!-- camera island -->
+      <rect x="76" y="36" width="52" height="52" rx="12" fill="#0b1220"/>
+      <circle cx="92" cy="52" r="8" fill="#223252" stroke="#33415e" stroke-width="2"/>
+      <circle cx="112" cy="72" r="8" fill="#223252" stroke="#33415e" stroke-width="2"/>
+      <!-- flash glowing -->
+      <circle id="flashGlow" cx="112" cy="52" r="7" fill="#ffc857"/>
+      <!-- fingertip pressing camera -->
+      <g id="fingerGroup">
+        <ellipse cx="120" cy="70" rx="34" ry="42" fill="#e8a87c" transform="rotate(-35 120 70)"/>
+        <ellipse cx="118" cy="66" rx="20" ry="26" fill="#f2bd94" transform="rotate(-35 118 66)"/>
+        <path d="M140 30 Q175 -5 205 25 L160 95 Z" fill="#e8a87c"/>
+      </g>
+      <!-- pulse line below -->
+      <path d="M20 190 h55 l8 -14 10 26 9 -18 6 6 h112" stroke="#ff5d73" stroke-width="4" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="step-sub" data-i18n="guide_text"></div>
+  <div class="stack">
+    <button class="bigbtn" id="startBtn">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+      <span data-i18n="start"></span>
+    </button>
+    <button class="bigbtn secondary" id="guideBack" data-i18n="back"></button>
+  </div>
+</section>
+
+<!-- ============ MEASURING ============ -->
+<section class="screen" id="scr-measure">
+  <div class="step-title" id="measureTitle"></div>
+  <div class="ring-wrap">
+    <svg width="230" height="230">
+      <circle cx="115" cy="115" r="100" stroke="#223252" stroke-width="14" fill="none"/>
+      <circle id="ringProg" cx="115" cy="115" r="100" stroke="#ff5d73" stroke-width="14" fill="none"
+              stroke-linecap="round" stroke-dasharray="628" stroke-dashoffset="628"/>
+    </svg>
+    <div class="ring-center">
+      <div class="hr" id="hrLive">--</div>
+      <div class="unit" data-i18n="bpm"></div>
+    </div>
+  </div>
+  <div class="contact-pill no" id="contactPill">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7v5.5A5.5 5.5 0 0 0 10.5 20H12v2l4-3-4-3v2h-1.5A3.5 3.5 0 0 1 7 14.5V9a5 5 0 0 1 10 0v3h2V9a7 7 0 0 0-7-7z"/></svg>
+    <span id="contactText"></span>
   </div>
   <canvas id="wave"></canvas>
-  <progress id="prog" max="30" value="0"></progress>
-  <div class="status-row"><span class="k">Finger contact</span><span class="badge bad" id="contactBadge">Not detected</span></div>
-  <div class="status-row"><span class="k">Signal quality</span><span class="badge bad" id="qualBadge">--</span></div>
-  <button class="primary stop" id="stopBtn">Cancel</button>
-</div>
-
-<div class="card hidden" id="resultCard">
-  <h2>Result</h2>
-  <div class="result-grid">
-    <div class="result-item"><div class="v" id="rHr">--</div><div class="k">Heart rate (bpm)</div></div>
-    <div class="result-item"><div class="v" id="rHrv">--</div><div class="k">HRV RMSSD (ms)</div></div>
-    <div class="result-item"><div class="v" id="rQual">--</div><div class="k">Signal quality</div></div>
-    <div class="result-item"><div class="v" id="rConf">--</div><div class="k">Confidence</div></div>
+  <div class="stack">
+    <button class="bigbtn secondary" id="stopBtn" data-i18n="cancel"></button>
   </div>
-  <p class="instructions" id="rInterp" style="margin-top:12px;"></p>
-  <button class="primary" id="againBtn" style="margin-top:12px;">Measure again</button>
-</div>
+</section>
 
-<div class="card">
-  <h2>History &amp; personal baseline</h2>
-  <div id="baselineLine" class="instructions" style="margin-bottom:8px;">No baseline yet — take a few measurements.</div>
-  <div id="history"><div class="instructions">No measurements yet.</div></div>
-</div>
+<!-- ============ RESULT ============ -->
+<section class="screen" id="scr-result">
+  <div class="step-title" data-i18n="result_title"></div>
+  <div class="card">
+    <div class="result-icon" id="resultIcon"></div>
+    <div class="result-hr" id="rHr">--</div>
+    <div class="result-unit" data-i18n="bpm"></div>
+    <div class="result-msg" id="rMsg"></div>
+    <div class="mini-grid">
+      <div class="mini"><div class="v" id="rHrv">--</div><div class="k" data-i18n="hrv"></div></div>
+      <div class="mini"><div class="v" id="rQual">--</div><div class="k" data-i18n="quality"></div></div>
+    </div>
+  </div>
+  <div class="stack">
+    <button class="bigbtn" id="againBtn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>
+      <span data-i18n="again"></span>
+    </button>
+    <button class="bigbtn green" id="doneBtn" data-i18n="done"></button>
+  </div>
+</section>
 
-<footer>SPHL Core · camera_ppg · algorithm v0.1.0 · data stays on this device (localStorage)</footer>
 <video id="video" autoplay playsinline muted></video>
 
 <script>
 "use strict";
-// ---------------------------------------------------------------
-// SPHL Core prototype — camera PPG pipeline (blueprint section 5.1)
-// Camera frames -> ROI mean red -> detrend -> band-pass -> peaks
-// -> HR / IBI / RMSSD + signal quality gating (section 22)
-// ---------------------------------------------------------------
+// =================================================================
+// SPHL Core v0.2 — guided, voice-assisted camera-PPG measurement
+// Pipeline unchanged from v0.1 (blueprint §5.1); UI rebuilt as a
+// step-by-step wizard with speech guidance for low-literacy users.
+// =================================================================
 const ALGO_VERSION = "0.1.0";
 const MEASURE_SECONDS = 30;
-const FS_TARGET = 30;                 // nominal frame rate
-const MIN_IBI_MS = 333, MAX_IBI_MS = 1500; // 40–180 bpm
+const FS_TARGET = 30;
+const MIN_IBI_MS = 333, MAX_IBI_MS = 1500;
+
+// ---------------- i18n ----------------
+const I18N = {
+  en: {
+    voice: "en-IN",
+    measure_now: "Check my heart", history_title: "My measurements",
+    guide_title: "Cover the camera",
+    guide_text: "Put your fingertip flat over the back camera and the light. Press softly. Hold still.",
+    start: "Start", back: "Back", cancel: "Stop", bpm: "heartbeats per minute",
+    result_title: "Your result", hrv: "Heart rhythm variation (ms)", quality: "Measurement quality",
+    again: "Measure again", done: "Done",
+    q_good: "Good", q_fair: "Okay", q_poor: "Poor",
+    measuring: "Measuring…", hold_still: "Hold still",
+    disclaimer: "Experimental — not a medical device. Not for medical decisions.",
+    baseline_none: "Your normal range will appear after 3 good measurements.",
+    baseline_line: (m, s) => `Your normal: ${m} ± ${s} beats per minute`,
+    v_welcome: "Welcome to Sirony Pocket Health Lab.",
+    v_guide: "Put your fingertip over the back camera and the light. Press softly and hold still.",
+    v_started: "Measuring. Keep your finger still for thirty seconds.",
+    v_finger_lost: "Finger not detected. Please cover the camera and the light with your fingertip.",
+    v_finger_ok: "Good. Hold still.",
+    v_done_ok: hr => `Done. Your heart rate is ${hr} beats per minute.`,
+    v_done_normal: "This is within your normal range.",
+    v_done_dev: "This is different from your normal. Please rest and measure again. If you feel unwell, see a health worker.",
+    v_fail: "The measurement did not work. Please try again. Cover the camera and the light fully, and keep your hand still.",
+    r_fail: "Could not measure. Cover the camera and light fully with your fingertip, keep your hand still, and try again.",
+    r_normal: "Within your normal range.",
+    r_first: "Saved. Measure 3 times on different days to learn your normal range.",
+    r_dev: "Different from your normal. Rest for 5 minutes and measure again. If you feel unwell, see a health worker."
+  },
+  hi: {
+    voice: "hi-IN",
+    measure_now: "दिल की जाँच करें", history_title: "मेरी जाँचें",
+    guide_title: "कैमरे को ढकें",
+    guide_text: "अपनी उंगली पीछे वाले कैमरे और लाइट पर रखें। हल्के से दबाएँ। हिलें नहीं।",
+    start: "शुरू करें", back: "वापस", cancel: "रोकें", bpm: "धड़कन प्रति मिनट",
+    result_title: "आपका परिणाम", hrv: "धड़कन में बदलाव (ms)", quality: "जाँच की गुणवत्ता",
+    again: "फिर से जाँचें", done: "पूरा हुआ",
+    q_good: "अच्छी", q_fair: "ठीक", q_poor: "खराब",
+    measuring: "जाँच हो रही है…", hold_still: "स्थिर रहें",
+    disclaimer: "प्रायोगिक — यह चिकित्सा उपकरण नहीं है। इलाज के फैसले के लिए नहीं।",
+    baseline_none: "3 अच्छी जाँच के बाद आपकी सामान्य सीमा दिखेगी।",
+    baseline_line: (m, s) => `आपकी सामान्य धड़कन: ${m} ± ${s} प्रति मिनट`,
+    v_welcome: "सिरोनी पॉकेट हेल्थ लैब में आपका स्वागत है।",
+    v_guide: "अपनी उंगली पीछे वाले कैमरे और लाइट पर रखें। हल्के से दबाएँ और स्थिर रहें।",
+    v_started: "जाँच शुरू। तीस सेकंड तक उंगली स्थिर रखें।",
+    v_finger_lost: "उंगली नहीं मिली। कृपया कैमरे और लाइट को उंगली से ढकें।",
+    v_finger_ok: "बहुत अच्छा। स्थिर रहें।",
+    v_done_ok: hr => `हो गया। आपकी धड़कन ${hr} प्रति मिनट है।`,
+    v_done_normal: "यह आपकी सामान्य सीमा में है।",
+    v_done_dev: "यह आपकी सामान्य सीमा से अलग है। आराम करके फिर जाँचें। तबीयत ठीक न लगे तो स्वास्थ्य कर्मी से मिलें।",
+    v_fail: "जाँच नहीं हो पाई। कृपया फिर कोशिश करें। कैमरे और लाइट को पूरा ढकें और हाथ स्थिर रखें।",
+    r_fail: "जाँच नहीं हो सकी। कैमरे और लाइट को उंगली से पूरा ढकें, हाथ स्थिर रखें, और फिर कोशिश करें।",
+    r_normal: "आपकी सामान्य सीमा में।",
+    r_first: "सहेजा गया। अपनी सामान्य सीमा जानने के लिए अलग-अलग दिन 3 बार जाँचें।",
+    r_dev: "आपकी सामान्य सीमा से अलग। 5 मिनट आराम करके फिर जाँचें। तबीयत ठीक न लगे तो स्वास्थ्य कर्मी से मिलें।"
+  },
+  ml: {
+    voice: "ml-IN",
+    measure_now: "ഹൃദയം പരിശോധിക്കുക", history_title: "എന്റെ പരിശോധനകൾ",
+    guide_title: "ക്യാമറ മൂടുക",
+    guide_text: "വിരൽത്തുമ്പ് പിന്നിലെ ക്യാമറയിലും ലൈറ്റിലും വയ്ക്കുക. പതുക്കെ അമർത്തുക. അനങ്ങരുത്.",
+    start: "തുടങ്ങുക", back: "മടങ്ങുക", cancel: "നിർത്തുക", bpm: "മിനിറ്റിൽ ഹൃദയമിടിപ്പ്",
+    result_title: "നിങ്ങളുടെ ഫലം", hrv: "മിടിപ്പ് വ്യതിയാനം (ms)", quality: "പരിശോധനയുടെ നിലവാരം",
+    again: "വീണ്ടും പരിശോധിക്കുക", done: "കഴിഞ്ഞു",
+    q_good: "നല്ലത്", q_fair: "തരക്കേടില്ല", q_poor: "മോശം",
+    measuring: "പരിശോധിക്കുന്നു…", hold_still: "അനങ്ങാതിരിക്കുക",
+    disclaimer: "പരീക്ഷണാത്മകം — ഇത് മെഡിക്കൽ ഉപകരണമല്ല. ചികിത്സാ തീരുമാനങ്ങൾക്കല്ല.",
+    baseline_none: "3 നല്ല പരിശോധനകൾക്ക് ശേഷം നിങ്ങളുടെ സാധാരണ നില കാണാം.",
+    baseline_line: (m, s) => `നിങ്ങളുടെ സാധാരണ മിടിപ്പ്: ${m} ± ${s} / മിനിറ്റ്`,
+    v_welcome: "സിറോണി പോക്കറ്റ് ഹെൽത്ത് ലാബിലേക്ക് സ്വാഗതം.",
+    v_guide: "വിരൽത്തുമ്പ് പിന്നിലെ ക്യാമറയിലും ലൈറ്റിലും വയ്ക്കുക. പതുക്കെ അമർത്തി അനങ്ങാതിരിക്കുക.",
+    v_started: "പരിശോധന തുടങ്ങി. മുപ്പത് സെക്കൻഡ് വിരൽ അനക്കരുത്.",
+    v_finger_lost: "വിരൽ കാണുന്നില്ല. ക്യാമറയും ലൈറ്റും വിരൽകൊണ്ട് മൂടുക.",
+    v_finger_ok: "നല്ലത്. അനങ്ങാതിരിക്കുക.",
+    v_done_ok: hr => `കഴിഞ്ഞു. നിങ്ങളുടെ ഹൃദയമിടിപ്പ് മിനിറ്റിൽ ${hr} ആണ്.`,
+    v_done_normal: "ഇത് നിങ്ങളുടെ സാധാരണ നിലയിലാണ്.",
+    v_done_dev: "ഇത് സാധാരണ നിലയിൽ നിന്ന് വ്യത്യസ്തമാണ്. വിശ്രമിച്ച ശേഷം വീണ്ടും പരിശോധിക്കുക. അസുഖം തോന്നിയാൽ ആരോഗ്യപ്രവർത്തകനെ കാണുക.",
+    v_fail: "പരിശോധന നടന്നില്ല. വീണ്ടും ശ്രമിക്കുക. ക്യാമറയും ലൈറ്റും പൂർണ്ണമായി മൂടുക, കൈ അനക്കരുത്.",
+    r_fail: "പരിശോധിക്കാനായില്ല. ക്യാമറയും ലൈറ്റും വിരൽകൊണ്ട് പൂർണ്ണമായി മൂടി, കൈ അനക്കാതെ വീണ്ടും ശ്രമിക്കുക.",
+    r_normal: "നിങ്ങളുടെ സാധാരണ നിലയിൽ.",
+    r_first: "സൂക്ഷിച്ചു. സാധാരണ നില അറിയാൻ വ്യത്യസ്ത ദിവസങ്ങളിൽ 3 തവണ പരിശോധിക്കുക.",
+    r_dev: "സാധാരണ നിലയിൽ നിന്ന് വ്യത്യസ്തം. 5 മിനിറ്റ് വിശ്രമിച്ച് വീണ്ടും പരിശോധിക്കുക. അസുഖം തോന്നിയാൽ ആരോഗ്യപ്രവർത്തകനെ കാണുക."
+  }
+};
+let LANG = localStorage.getItem("sphl_lang");
+const T = () => I18N[LANG] || I18N.en;
 
 const $ = id => document.getElementById(id);
+function applyI18n() {
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const v = T()[el.dataset.i18n];
+    if (typeof v === "string") el.textContent = v;
+  });
+  document.documentElement.lang = LANG || "en";
+}
+
+// ---------------- speech guidance ----------------
+let voicesReady = [];
+if ("speechSynthesis" in window) {
+  speechSynthesis.onvoiceschanged = () => { voicesReady = speechSynthesis.getVoices(); };
+  voicesReady = speechSynthesis.getVoices();
+}
+function speak(text) {
+  if (!("speechSynthesis" in window) || !text) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const langTag = T().voice;
+  u.lang = langTag;
+  const v = voicesReady.find(v => v.lang === langTag) ||
+            voicesReady.find(v => v.lang && v.lang.startsWith(langTag.split("-")[0]));
+  if (v) u.voice = v;
+  u.rate = 0.95;
+  speechSynthesis.speak(u);
+}
+function buzz(pattern) { if (navigator.vibrate) navigator.vibrate(pattern); }
+
+// ---------------- screens ----------------
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+}
+
+// ---------------- capture (unchanged pipeline) ----------------
 const video = $("video");
 const waveCanvas = $("wave"), waveCtx = waveCanvas.getContext("2d");
 const grab = document.createElement("canvas");
@@ -140,10 +371,9 @@ grab.width = 64; grab.height = 48;
 const grabCtx = grab.getContext("2d", { willReadFrequently: true });
 
 let stream = null, track = null, running = false, rafId = null;
-let samples = [];      // {t, r, g, b}
-let startTime = 0;
+let samples = [], startTime = 0, lastResult = null;
+let lastContactState = null, lastContactCueAt = 0;
 
-// ---------- capture ----------
 async function startCapture() {
   try {
     stream = await navigator.mediaDevices.getUserMedia({
@@ -151,13 +381,11 @@ async function startCapture() {
       audio: false
     });
   } catch (e) {
-    alert("Camera access failed: " + e.message +
-      "\n\nNote: camera requires HTTPS (or http://localhost).");
+    alert("Camera access failed: " + e.message + "\n(HTTPS or localhost required)");
     return false;
   }
   video.srcObject = stream;
   track = stream.getVideoTracks()[0];
-  // Try to enable torch (Android Chrome). Fails silently elsewhere.
   try {
     const caps = track.getCapabilities ? track.getCapabilities() : {};
     if (caps.torch) await track.applyConstraints({ advanced: [{ torch: true }] });
@@ -168,12 +396,10 @@ function stopCapture() {
   if (stream) stream.getTracks().forEach(t => t.stop());
   stream = null; track = null;
 }
-
-// ---------- per-frame sampling ----------
 function sampleFrame() {
   if (!running) return;
   grabCtx.drawImage(video, 0, 0, grab.width, grab.height);
-  const d = grabCtx.getImageData(16, 12, 32, 24).data; // center ROI
+  const d = grabCtx.getImageData(16, 12, 32, 24).data;
   let r = 0, g = 0, b = 0, n = d.length / 4;
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i+1]; b += d[i+2]; }
   r /= n; g /= n; b /= n;
@@ -184,25 +410,15 @@ function sampleFrame() {
   processTick(t);
   rafId = requestAnimationFrame(sampleFrame);
 }
-
-// ---------- finger detection ----------
-function fingerDetected(s) {
-  // Finger over lens+light: red dominant and bright
-  return s.r > 60 && s.r > s.g * 1.4 && s.r > s.b * 1.4;
-}
-
-// ---------- signal processing ----------
+function fingerDetected(s) { return s.r > 60 && s.r > s.g * 1.4 && s.r > s.b * 1.4; }
 function movingAverage(arr, w) {
-  const out = new Array(arr.length);
-  let acc = 0;
+  const out = new Array(arr.length); let acc = 0;
   for (let i = 0; i < arr.length; i++) {
-    acc += arr[i];
-    if (i >= w) acc -= arr[i - w];
+    acc += arr[i]; if (i >= w) acc -= arr[i - w];
     out[i] = acc / Math.min(i + 1, w);
   }
   return out;
 }
-// Detrend (remove slow baseline) then smooth (remove noise) = crude band-pass
 function bandpass(values, fs) {
   const slow = movingAverage(values, Math.max(3, Math.round(fs * 1.2)));
   const det = values.map((v, i) => v - slow[i]);
@@ -210,7 +426,7 @@ function bandpass(values, fs) {
 }
 function detectPeaks(sig, times) {
   const peaks = [];
-  const amp = Math.sqrt(sig.reduce((a, v) => a + v * v, 0) / sig.length); // RMS
+  const amp = Math.sqrt(sig.reduce((a, v) => a + v * v, 0) / sig.length);
   const thr = amp * 0.6;
   let lastPeakT = -Infinity;
   for (let i = 2; i < sig.length - 2; i++) {
@@ -238,11 +454,9 @@ function analyse() {
   const sorted = [...ibis].sort((a, b) => a - b);
   const medIbi = sorted[Math.floor(sorted.length / 2)];
   const hr = 60000 / medIbi;
-  // RMSSD
   let ss = 0;
   for (let i = 1; i < ibis.length; i++) ss += (ibis[i] - ibis[i-1]) ** 2;
   const rmssd = Math.sqrt(ss / (ibis.length - 1));
-  // Quality: IBI regularity + valid-beat coverage + finger contact fraction
   const meanIbi = ibis.reduce((a, v) => a + v, 0) / ibis.length;
   const cv = Math.sqrt(ibis.reduce((a, v) => a + (v - meanIbi) ** 2, 0) / ibis.length) / meanIbi;
   const regularity = Math.max(0, 1 - cv * 2.2);
@@ -252,36 +466,42 @@ function analyse() {
   return { sig, hr, rmssd, ibis, quality, contact };
 }
 
-// ---------- live UI ----------
-let lastResult = null;
+// ---------------- live measuring UI + voice cues ----------------
+const RING_LEN = 628;
 function processTick(now) {
   const s = samples[samples.length - 1];
   const contactOk = fingerDetected(s);
-  setBadge($("contactBadge"), contactOk ? "Good" : "Not detected", contactOk ? "good" : "bad");
+
+  const pill = $("contactPill");
+  pill.className = "contact-pill " + (contactOk ? "ok" : "no");
+  $("contactText").textContent = contactOk ? T().v_finger_ok : T().v_finger_lost;
+
+  // Spoken cue on contact change (rate-limited)
+  if (contactOk !== lastContactState && now - lastContactCueAt > 4000) {
+    speak(contactOk ? T().v_finger_ok : T().v_finger_lost);
+    if (!contactOk) buzz([120, 80, 120]);
+    lastContactState = contactOk; lastContactCueAt = now;
+  }
 
   const res = analyse();
   lastResult = res;
   if (res && res.hr && res.quality > 0.25) {
     $("hrLive").textContent = Math.round(res.hr);
-    $("phaseLabel").textContent = "Measuring — hold still";
+    $("measureTitle").textContent = T().hold_still;
   } else {
     $("hrLive").textContent = "--";
-    $("phaseLabel").textContent = contactOk ? "Acquiring signal…" : "Cover the camera with your fingertip";
+    $("measureTitle").textContent = T().measuring;
   }
-  if (res) {
-    const q = res.quality;
-    setBadge($("qualBadge"), q > 0.7 ? "Good" : q > 0.4 ? "Fair" : "Poor",
-             q > 0.7 ? "good" : q > 0.4 ? "warn" : "bad");
-    drawWave(res.sig);
-  }
+  if (res) drawWave(res.sig);
+
   const elapsed = (now - startTime) / 1000;
-  $("prog").value = Math.min(MEASURE_SECONDS, elapsed);
+  $("ringProg").style.strokeDashoffset =
+    Math.max(0, RING_LEN * (1 - elapsed / MEASURE_SECONDS));
   if (elapsed >= MEASURE_SECONDS) finishMeasurement();
 }
-function setBadge(el, text, cls) { el.textContent = text; el.className = "badge " + cls; }
 function drawWave(sig) {
   const W = waveCanvas.width = waveCanvas.clientWidth * devicePixelRatio;
-  const H = waveCanvas.height = 90 * devicePixelRatio;
+  const H = waveCanvas.height = 70 * devicePixelRatio;
   waveCtx.clearRect(0, 0, W, H);
   const view = sig.slice(-Math.floor(sig.length * 0.6));
   if (view.length < 2) return;
@@ -298,73 +518,85 @@ function drawWave(sig) {
   waveCtx.stroke();
 }
 
-// ---------- lifecycle ----------
-async function start() {
+// ---------------- lifecycle ----------------
+async function startMeasurement() {
   $("startBtn").disabled = true;
   if (!(await startCapture())) { $("startBtn").disabled = false; return; }
   samples = []; running = true; startTime = performance.now();
-  $("setupCard").classList.add("hidden");
-  $("resultCard").classList.add("hidden");
-  $("liveCard").classList.remove("hidden");
+  lastContactState = null; lastContactCueAt = 0;
+  $("ringProg").style.strokeDashoffset = RING_LEN;
+  show("scr-measure");
   $("startBtn").disabled = false;
+  speak(T().v_started);
   rafId = requestAnimationFrame(sampleFrame);
 }
-function stop() {
+function cancelMeasurement() {
   running = false;
   if (rafId) cancelAnimationFrame(rafId);
   stopCapture();
-  $("liveCard").classList.add("hidden");
-  $("setupCard").classList.remove("hidden");
+  speechSynthesis && speechSynthesis.cancel();
+  show("scr-home");
 }
+const ICON_OK = '<svg width="84" height="84" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="rgba(61,220,151,0.15)"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#3ddc97" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_RETRY = '<svg width="84" height="84" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="rgba(255,200,87,0.15)"/><path d="M12 6.5V4l-3.2 3 3.2 3V7.7a4.3 4.3 0 1 1-4.3 4.3H6a6 6 0 1 0 6-5.5z" fill="#ffc857"/></svg>';
+
 function finishMeasurement() {
   const res = lastResult;
   running = false;
   if (rafId) cancelAnimationFrame(rafId);
   stopCapture();
-  $("liveCard").classList.add("hidden");
 
   if (!res || !res.hr || res.quality < 0.3) {
-    // Blueprint section 22: "I don't have enough reliable data" is a feature.
-    $("resultCard").classList.remove("hidden");
-    $("rHr").textContent = "--"; $("rHrv").textContent = "--";
-    $("rQual").textContent = "Poor"; $("rConf").textContent = "Low";
-    $("rInterp").textContent =
-      "Not enough reliable signal. Possible causes: poor finger contact, movement, low light. " +
-      "Nothing was saved. Please repeat the measurement.";
+    // Blueprint §22: refusing to report is a feature
+    $("resultIcon").innerHTML = ICON_RETRY;
+    $("rHr").textContent = "--";
+    $("rHrv").textContent = "--"; $("rQual").textContent = T().q_poor;
+    $("rMsg").textContent = T().r_fail;
+    show("scr-result");
+    speak(T().v_fail);
+    buzz([300]);
     return;
   }
   const hr = Math.round(res.hr);
   const rmssd = Math.round(res.rmssd);
   const quality = res.quality;
-  const confidence = Math.min(1, quality * 1.05);
   const record = {
     measurement_id: crypto.randomUUID(),
     measurement_type: "heart_rate", value: hr, unit: "bpm",
     hrv_rmssd_ms: rmssd,
     source: "camera_ppg", evidence_class: "B", tier: "T0",
-    signal_quality: +quality.toFixed(2), confidence: +confidence.toFixed(2),
+    signal_quality: +quality.toFixed(2),
+    confidence: +Math.min(1, quality * 1.05).toFixed(2),
     algorithm_version: ALGO_VERSION, timestamp: new Date().toISOString()
   };
   const hist = loadHistory();
+  const base = baseline(hist);
   hist.push(record);
   localStorage.setItem("sphl_history", JSON.stringify(hist));
 
-  $("resultCard").classList.remove("hidden");
   $("rHr").textContent = hr;
   $("rHrv").textContent = rmssd;
-  $("rQual").textContent = quality > 0.7 ? "Good" : quality > 0.4 ? "Fair" : "Poor";
-  $("rConf").textContent = confidence > 0.7 ? "High" : confidence > 0.4 ? "Medium" : "Low";
-  $("rInterp").textContent = interpret(hr, hist);
+  $("rQual").textContent = quality > 0.7 ? T().q_good : quality > 0.4 ? T().q_fair : T().q_poor;
+
+  let msg, vmsg, ok = true;
+  if (!base) { msg = T().r_first; vmsg = ""; }
+  else {
+    const dev = Math.abs(hr - base.mean) / (base.sd || 5);
+    if (dev < 2) { msg = T().r_normal; vmsg = T().v_done_normal; }
+    else { msg = T().r_dev; vmsg = T().v_done_dev; ok = false; }
+  }
+  $("resultIcon").innerHTML = ok ? ICON_OK : ICON_RETRY;
+  $("rMsg").textContent = msg;
   renderHistory();
+  show("scr-result");
+  buzz(ok ? [80, 60, 80] : [250, 100, 250]);
+  speak(T().v_done_ok(hr) + " " + vmsg);
 }
-// Conservative interpretation layer (blueprint sections 23 and 26)
-function interpret(hr, hist) {
-  const base = baseline(hist.slice(0, -1));
-  if (!base) return "Recorded. Your personal baseline will form after a few measurements — deviations are then compared to YOUR normal, not population averages.";
-  const dev = Math.abs(hr - base.mean) / (base.sd || 5);
-  if (dev < 2) return `Within your personal baseline (${Math.round(base.mean)} ± ${Math.round(base.sd)} bpm). No significant deviation detected.`;
-  return `This reading deviates from your personal baseline (${Math.round(base.mean)} ± ${Math.round(base.sd)} bpm). ` +
-    "Repeat the measurement at rest. If the deviation persists or you have symptoms, consider medical evaluation. This is not a diagnosis.";
+
+// ---------------- baseline + history ----------------
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem("sphl_history")) || []; }
+  catch (_) { return []; }
 }
 function baseline(hist) {
   const vals = hist.filter(h => h.signal_quality >= 0.4).map(h => h.value);
@@ -373,33 +605,48 @@ function baseline(hist) {
   const sd = Math.sqrt(vals.reduce((a, v) => a + (v - mean) ** 2, 0) / vals.length);
   return { mean, sd: Math.max(sd, 3) };
 }
-function loadHistory() {
-  try { return JSON.parse(localStorage.getItem("sphl_history")) || []; }
-  catch (_) { return []; }
-}
 function renderHistory() {
   const hist = loadHistory();
   const el = $("history");
-  if (!hist.length) { el.innerHTML = '<div class="instructions">No measurements yet.</div>'; return; }
-  el.innerHTML = hist.slice(-8).reverse().map(h =>
-    `<div class="entry"><div><b>${h.value} bpm</b> · HRV ${h.hrv_rmssd_ms} ms
-     <span class="badge ${h.signal_quality > 0.7 ? "good" : h.signal_quality > 0.4 ? "warn" : "bad"}">q ${h.signal_quality}</span></div>
-     <div class="t">${new Date(h.timestamp).toLocaleString()}</div></div>`).join("");
+  el.innerHTML = hist.length
+    ? hist.slice(-6).reverse().map(h =>
+        `<div class="entry"><div><b>${h.value}</b> ♥ · ${h.hrv_rmssd_ms} ms
+         <span class="badge ${h.signal_quality > 0.7 ? "good" : h.signal_quality > 0.4 ? "warn" : "bad"}">${
+           h.signal_quality > 0.7 ? T().q_good : h.signal_quality > 0.4 ? T().q_fair : T().q_poor}</span></div>
+         <div class="t">${new Date(h.timestamp).toLocaleDateString()}</div></div>`).join("")
+    : "";
   const base = baseline(hist);
-  $("baselineLine").innerHTML = base
-    ? `Personal baseline: <b>${Math.round(base.mean)} ± ${Math.round(base.sd)} bpm</b> (${hist.length} measurements)`
-    : `No baseline yet — ${3 - hist.length > 0 ? 3 - hist.length : 0} more good measurements needed.`;
+  $("baselineLine").textContent = base
+    ? T().baseline_line(Math.round(base.mean), Math.round(base.sd))
+    : T().baseline_none;
 }
 
-// PWA: offline shell + installability
+// ---------------- wiring ----------------
+document.querySelectorAll("#scr-lang [data-lang]").forEach(btn =>
+  btn.addEventListener("click", () => {
+    LANG = btn.dataset.lang;
+    localStorage.setItem("sphl_lang", LANG);
+    applyI18n(); renderHistory();
+    show("scr-home");
+    speak(T().v_welcome);
+  })
+);
+$("langSwitch").addEventListener("click", () => show("scr-lang"));
+$("goMeasure").addEventListener("click", () => { show("scr-guide"); speak(T().v_guide); });
+$("guideBack").addEventListener("click", () => { speechSynthesis && speechSynthesis.cancel(); show("scr-home"); });
+$("startBtn").addEventListener("click", startMeasurement);
+$("stopBtn").addEventListener("click", cancelMeasurement);
+$("againBtn").addEventListener("click", () => { show("scr-guide"); speak(T().v_guide); });
+$("doneBtn").addEventListener("click", () => { speechSynthesis && speechSynthesis.cancel(); show("scr-home"); });
+
+// PWA
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
 
-$("startBtn").addEventListener("click", start);
-$("stopBtn").addEventListener("click", stop);
-$("againBtn").addEventListener("click", start);
-renderHistory();
+// boot
+if (LANG && I18N[LANG]) { applyI18n(); renderHistory(); show("scr-home"); }
+else { show("scr-lang"); }
 </script>
 </body>
 </html>
