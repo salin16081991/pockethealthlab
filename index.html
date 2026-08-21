@@ -33,32 +33,42 @@
     background: var(--card); color: var(--text); border: 1px solid #223252;
     border-radius: 20px; padding: 6px 12px; font-size: 0.85rem; cursor: pointer;
   }
-  .card { background: var(--card); border-radius: 16px; padding: 18px; margin-bottom: 12px; }
+  .card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
   .bigbtn {
     width: 100%; border: none; border-radius: 18px; cursor: pointer;
     background: var(--accent); color: #fff; font-weight: 800;
-    font-size: 1.25rem; padding: 20px; font-family: inherit;
+    font-size: 1.15rem; padding: 18px; font-family: inherit;
     display: flex; align-items: center; justify-content: center; gap: 12px;
   }
   .bigbtn.secondary { background: #33415e; }
   .bigbtn.green { background: var(--good); color: #06281a; }
-  .bigbtn svg { flex: 0 0 auto; }
+  .bigbtn.blue { background: var(--breath); }
   .bigbtn:active { transform: scale(0.98); }
-  .stack { display: flex; flex-direction: column; gap: 12px; margin-top: auto; padding-bottom: 8px; }
+  .stack { display: flex; flex-direction: column; gap: 10px; margin-top: auto; padding-bottom: 8px; }
   .center { text-align: center; }
   .muted { color: var(--muted); }
-  .step-title { font-size: 1.3rem; font-weight: 800; text-align: center; margin: 8px 0 4px; }
+  .step-title { font-size: 1.25rem; font-weight: 800; text-align: center; margin: 8px 0 4px; }
   .step-sub { color: var(--muted); text-align: center; font-size: 0.95rem; line-height: 1.5; }
-  /* language screen */
   .langlist { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
   .langlist button {
     background: var(--card); border: 2px solid #223252; color: var(--text);
     border-radius: 18px; padding: 22px; font-size: 1.5rem; font-weight: 700;
     cursor: pointer; font-family: inherit;
   }
-  .langlist button:active { border-color: var(--accent); }
-  /* illustration */
+  /* home tiles */
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .tile {
+    background: var(--card); border: 1px solid #223252; border-radius: 16px;
+    padding: 16px 10px; text-align: center; cursor: pointer; font-family: inherit;
+    color: var(--text); font-weight: 700; font-size: 0.9rem;
+  }
+  .tile .em { font-size: 2rem; display: block; margin-bottom: 6px; }
+  .tile:active { transform: scale(0.96); }
+  .tile.wide { grid-column: 1 / -1; }
+  .tile.sos { background: rgba(255,93,115,0.15); border-color: var(--accent); color: var(--accent); }
+  /* guide illus */
   .illus { display: flex; justify-content: center; margin: 12px 0; }
+  .illus .em { font-size: 5.5rem; }
   @keyframes pressPulse { 0%,100% { transform: translate(0,0);} 50% { transform: translate(-14px,14px);} }
   #fingerGroup { animation: pressPulse 2.2s ease-in-out infinite; }
   @keyframes glow { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
@@ -67,65 +77,71 @@
   #chestPhone { animation: chestRise 4s ease-in-out infinite; }
   @keyframes airPuff { 0%,100% { opacity: 0.15;} 50% { opacity: 0.9;} }
   #airLines { animation: airPuff 4s ease-in-out infinite; }
-  /* measuring screen */
-  .ring-wrap { position: relative; width: 230px; height: 230px; margin: 8px auto; }
+  /* measuring */
+  .ring-wrap { position: relative; width: 220px; height: 220px; margin: 6px auto; }
   .ring-wrap svg { transform: rotate(-90deg); }
-  .ring-center {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 2px;
-  }
-  .ring-center .hr { font-size: 3.2rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
-  .ring-center .unit { color: var(--muted); font-size: 0.85rem; }
+  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-center .hr { font-size: 3rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+  .ring-center .unit { color: var(--muted); font-size: 0.8rem; text-align: center; padding: 0 30px; }
   .contact-pill {
     display: flex; align-items: center; justify-content: center; gap: 10px;
-    border-radius: 14px; padding: 14px; font-size: 1.05rem; font-weight: 700;
+    border-radius: 14px; padding: 12px; font-size: 1rem; font-weight: 700;
   }
   .contact-pill.ok { background: rgba(61,220,151,0.15); color: var(--good); }
   .contact-pill.no { background: rgba(255,93,115,0.15); color: var(--bad); }
-  #wave { width: 100%; height: 70px; display: block; background: var(--card2); border-radius: 10px; margin-top: 12px; }
-  /* result screen */
-  .result-icon { display: flex; justify-content: center; margin: 6px 0; }
-  .result-hr { font-size: 4.2rem; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
+  #wave { width: 100%; height: 64px; display: block; background: var(--card2); border-radius: 10px; margin-top: 10px; }
+  /* result */
+  .result-icon { display: flex; justify-content: center; margin: 4px 0; }
+  .result-hr { font-size: 3.8rem; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
   .result-unit { text-align: center; color: var(--muted); margin-bottom: 8px; }
-  .result-msg { text-align: center; font-size: 1.05rem; line-height: 1.55; padding: 0 6px; }
-  .mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .result-msg { text-align: center; font-size: 1rem; line-height: 1.5; padding: 0 6px; }
+  .mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
   .mini { background: var(--card2); border-radius: 12px; padding: 10px 12px; text-align: center; }
   .mini .v { font-size: 1.15rem; font-weight: 700; }
   .mini .k { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
-  /* home */
-  .homebtn {
-    background: radial-gradient(circle at 35% 30%, #ff7d8f, var(--accent));
-    border: none; border-radius: 26px; width: 100%; padding: 26px; margin: 8px 0 0;
-    display: flex; align-items: center; justify-content: center; gap: 16px;
-    color: #fff; font-size: 1.2rem; font-weight: 800; cursor: pointer; font-family: inherit;
-    box-shadow: 0 0 0 8px rgba(255,93,115,0.08);
-  }
-  .homebtn.breath {
-    background: radial-gradient(circle at 35% 30%, #7dbcff, var(--breath));
-    box-shadow: 0 0 0 8px rgba(74,163,255,0.08);
-  }
-  .homebtn:active { transform: scale(0.97); }
-  @keyframes beat { 0%,100% { transform: scale(1);} 12% { transform: scale(1.12);} 24% { transform: scale(1);} }
-  .homebtn.heart svg { animation: beat 1.6s infinite; }
-  @keyframes breathe { 0%,100% { transform: scale(1);} 50% { transform: scale(1.1);} }
-  .homebtn.breath svg { animation: breathe 4s ease-in-out infinite; }
-  #history .entry {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 0; border-bottom: 1px solid #223252; font-size: 0.9rem;
-  }
+  #history .entry { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #223252; font-size: 0.88rem; }
   #history .entry:last-child { border-bottom: none; }
   #history .t { color: var(--muted); font-size: 0.72rem; }
-  .badge { padding: 2px 10px; border-radius: 20px; font-weight: 600; font-size: 0.75rem; }
+  .badge { padding: 2px 10px; border-radius: 20px; font-weight: 600; font-size: 0.72rem; }
   .badge.good { background: rgba(61,220,151,0.15); color: var(--good); }
   .badge.warn { background: rgba(255,200,87,0.15); color: var(--warn); }
   .badge.bad  { background: rgba(255,93,115,0.15); color: var(--bad); }
-  .disclaimer { font-size: 0.68rem; color: var(--muted); text-align: center; padding: 8px 4px; }
+  .disclaimer { font-size: 0.68rem; color: var(--muted); text-align: center; padding: 6px 4px; }
   #video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  /* reaction + taps */
+  .bigarea {
+    flex: 1; border-radius: 20px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px; cursor: pointer;
+    font-size: 1.5rem; font-weight: 800; margin-bottom: 12px; min-height: 300px;
+    background: var(--card2); user-select: none; -webkit-user-select: none; text-align: center; padding: 20px;
+  }
+  .bigarea.waitState { background: #5a2430; }
+  .bigarea.goState { background: #14532d; }
+  .bigarea .big { font-size: 3rem; font-variant-numeric: tabular-nums; }
+  /* photo */
+  #photoVideo { width: 100%; border-radius: 16px; background: #000; max-height: 55vh; object-fit: cover; }
+  .photo-overlay { position: relative; }
+  .photo-guide {
+    position: absolute; inset: 12%; border: 3px dashed rgba(255,255,255,0.6);
+    border-radius: 16px; pointer-events: none;
+  }
+  .gallery { display: flex; gap: 8px; overflow-x: auto; padding: 6px 0; }
+  .gallery img { height: 90px; border-radius: 10px; }
+  .gallery .gitem { text-align: center; font-size: 0.65rem; color: var(--muted); }
+  /* report */
+  .rep-domain { margin-bottom: 4px; font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 10px; }
+  .rep-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #223252; font-size: 0.92rem; }
+  .rep-row:last-child { border-bottom: none; }
+  input[type="time"] {
+    background: var(--card2); color: var(--text); border: 1px solid #223252;
+    border-radius: 12px; padding: 14px; font-size: 1.2rem; width: 100%; font-family: inherit;
+  }
+  label { font-size: 0.85rem; color: var(--muted); display: block; margin: 10px 0 6px; }
 </style>
 </head>
 <body>
 
-<!-- ============ LANGUAGE ============ -->
+<!-- LANGUAGE -->
 <section class="screen" id="scr-lang">
   <div class="center" style="margin-top:30px;">
     <img src="icons/icon-192.png" width="72" height="72" style="border-radius:18px;">
@@ -137,30 +153,23 @@
   </div>
 </section>
 
-<!-- ============ HOME ============ -->
+<!-- HOME -->
 <section class="screen" id="scr-home">
   <header>
     <div class="brand"><img src="icons/icon-192.png" alt=""><h1>SPHL</h1></div>
     <button class="langbtn" id="langSwitch">🌐</button>
   </header>
-  <button class="homebtn heart" id="goMeasure">
-    <svg width="52" height="52" viewBox="0 0 24 24" fill="#fff"><path d="M12 21s-7.5-4.8-10-9.3C.4 8.7 2.2 5 5.8 5c2 0 3.4 1.1 4.2 2.4h4c.8-1.3 2.2-2.4 4.2-2.4 3.6 0 5.4 3.7 3.8 6.7C19.5 16.2 12 21 12 21z" transform="scale(0.9) translate(1.3,1.3)"/></svg>
-    <span data-i18n="measure_now"></span>
-  </button>
-  <button class="homebtn breath" id="goBreath">
-    <svg width="52" height="52" viewBox="0 0 24 24" fill="#fff"><path d="M11 4h2v7.5c0 .8.7 1.5 1.5 1.5H16V7c0-1 .9-2 2-2s2 1 2 2v9.5c0 2.5-2 4.5-4.5 4.5S11 18.9 11 16.5V13H9.5C8.7 13 8 13.7 8 14.5V16c0 2.4-2 4.4-4.4 4.4H3v-2h.6C4.9 18.4 6 17.3 6 16v-1.5C6 12.6 7.6 11 9.5 11H11V4z"/></svg>
-    <span data-i18n="measure_breath"></span>
-  </button>
-  <div class="card" style="margin-top:14px;">
+  <div class="tiles" id="tiles"></div>
+  <div class="card">
     <div style="font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;" data-i18n="history_title"></div>
-    <div id="baselineLine" class="muted" style="font-size:0.85rem;margin-bottom:6px;"></div>
+    <div id="baselineLine" class="muted" style="font-size:0.82rem;margin-bottom:6px;"></div>
     <div id="history"></div>
   </div>
   <div class="disclaimer" data-i18n="disclaimer"></div>
   <div class="disclaimer" id="verLine" style="opacity:0.7"></div>
 </section>
 
-<!-- ============ GUIDE ============ -->
+<!-- GUIDE -->
 <section class="screen" id="scr-guide">
   <div class="step-title" id="guideTitle"></div>
   <div class="illus" id="illusHeart">
@@ -180,24 +189,20 @@
   </div>
   <div class="illus" id="illusBreath" style="display:none;">
     <svg width="260" height="200" viewBox="0 0 260 200" fill="none">
-      <!-- bed line -->
       <rect x="10" y="150" width="240" height="8" rx="4" fill="#223252"/>
-      <!-- head -->
       <circle cx="42" cy="122" r="22" fill="#e8a87c"/>
-      <!-- body lying down -->
       <path d="M62 132 Q90 96 150 104 L235 116 Q246 120 244 132 L240 150 L64 150 Z" fill="#33415e"/>
-      <!-- phone on chest, rising and falling -->
       <g id="chestPhone">
         <rect x="102" y="72" width="34" height="58" rx="7" fill="#182642" stroke="#4aa3ff" stroke-width="3" transform="rotate(-8 119 101)"/>
         <circle cx="119" cy="118" r="4" fill="#4aa3ff" transform="rotate(-8 119 101)"/>
       </g>
-      <!-- air lines near mouth -->
       <g id="airLines" stroke="#4aa3ff" stroke-width="3" stroke-linecap="round">
         <path d="M30 92 q-6 -8 0 -16"/>
         <path d="M42 88 q-6 -10 0 -20"/>
       </g>
     </svg>
   </div>
+  <div class="illus" id="illusEmoji" style="display:none;"><span class="em" id="illusEmojiChar">🤲</span></div>
   <div class="step-sub" id="guideText"></div>
   <div class="stack">
     <button class="bigbtn" id="startBtn">
@@ -208,30 +213,28 @@
   </div>
 </section>
 
-<!-- ============ MEASURING ============ -->
+<!-- MEASURING (shared: heart / breath / motion / audio) -->
 <section class="screen" id="scr-measure">
   <div class="step-title" id="measureTitle"></div>
   <div class="ring-wrap">
-    <svg width="230" height="230">
-      <circle cx="115" cy="115" r="100" stroke="#223252" stroke-width="14" fill="none"/>
-      <circle id="ringProg" cx="115" cy="115" r="100" stroke="#ff5d73" stroke-width="14" fill="none"
-              stroke-linecap="round" stroke-dasharray="628" stroke-dashoffset="628"/>
+    <svg width="220" height="220">
+      <circle cx="110" cy="110" r="95" stroke="#223252" stroke-width="13" fill="none"/>
+      <circle id="ringProg" cx="110" cy="110" r="95" stroke="#ff5d73" stroke-width="13" fill="none"
+              stroke-linecap="round" stroke-dasharray="597" stroke-dashoffset="597"/>
     </svg>
     <div class="ring-center">
       <div class="hr" id="hrLive">--</div>
       <div class="unit" id="unitLive"></div>
     </div>
   </div>
-  <div class="contact-pill no" id="contactPill">
-    <span id="contactText"></span>
-  </div>
+  <div class="contact-pill no" id="contactPill"><span id="contactText"></span></div>
   <canvas id="wave"></canvas>
   <div class="stack">
     <button class="bigbtn secondary" id="stopBtn" data-i18n="cancel"></button>
   </div>
 </section>
 
-<!-- ============ RESULT ============ -->
+<!-- RESULT -->
 <section class="screen" id="scr-result">
   <div class="step-title" data-i18n="result_title"></div>
   <div class="card">
@@ -253,627 +256,89 @@
   </div>
 </section>
 
+<!-- REACTION -->
+<section class="screen" id="scr-react">
+  <div class="step-title" data-i18n="react_name"></div>
+  <div class="step-sub" id="reactRound"></div>
+  <div class="bigarea" id="reactArea"><span id="reactText"></span><span class="big" id="reactMs"></span></div>
+  <div class="stack"><button class="bigbtn secondary" id="reactCancel" data-i18n="cancel"></button></div>
+</section>
+
+<!-- TAPS -->
+<section class="screen" id="scr-taps">
+  <div class="step-title" data-i18n="taps_name"></div>
+  <div class="step-sub" id="tapsInfo"></div>
+  <div class="bigarea" id="tapsArea"><span id="tapsText"></span><span class="big" id="tapsCount"></span></div>
+  <div class="stack"><button class="bigbtn secondary" id="tapsCancel" data-i18n="cancel"></button></div>
+</section>
+
+<!-- PHOTO -->
+<section class="screen" id="scr-photo">
+  <div class="step-title" id="photoTitle"></div>
+  <div class="stack" id="photoTypes" style="margin-top:14px;">
+    <button class="bigbtn blue" data-ptype="skin">🩹 <span data-i18n="photo_skin"></span></button>
+    <button class="bigbtn blue" data-ptype="wound">🩸 <span data-i18n="photo_wound"></span></button>
+    <button class="bigbtn blue" data-ptype="eye">👁️ <span data-i18n="photo_eye"></span></button>
+    <button class="bigbtn secondary" id="photoBack1" data-i18n="back"></button>
+  </div>
+  <div id="photoCam" style="display:none;">
+    <div class="photo-overlay">
+      <video id="photoVideo" autoplay playsinline muted></video>
+      <div class="photo-guide"></div>
+    </div>
+    <div class="step-sub" style="margin-top:8px;" data-i18n="photo_tip"></div>
+    <div class="stack">
+      <button class="bigbtn" id="photoSnap">📸 <span data-i18n="photo_take"></span></button>
+      <button class="bigbtn secondary" id="photoBack2" data-i18n="back"></button>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section class="screen" id="scr-gallery">
+  <div class="step-title" data-i18n="gallery_title"></div>
+  <div id="galleryList" style="flex:1; overflow-y:auto;"></div>
+  <div class="stack"><button class="bigbtn secondary" id="galleryBack" data-i18n="back"></button></div>
+</section>
+
+<!-- SLEEP -->
+<section class="screen" id="scr-sleep">
+  <div class="step-title" data-i18n="sleep_name"></div>
+  <div class="illus"><span class="em">😴</span></div>
+  <div class="card">
+    <label data-i18n="sleep_bed"></label>
+    <input type="time" id="sleepBed" value="23:00">
+    <label data-i18n="sleep_wake"></label>
+    <input type="time" id="sleepWake" value="06:30">
+  </div>
+  <div class="stack">
+    <button class="bigbtn" id="sleepSave" data-i18n="save"></button>
+    <button class="bigbtn secondary" id="sleepBack" data-i18n="back"></button>
+  </div>
+</section>
+
+<!-- REPORT -->
+<section class="screen" id="scr-report">
+  <div class="step-title" data-i18n="report_name"></div>
+  <div class="card" id="reportBody" style="flex:1; overflow-y:auto;"></div>
+  <div class="stack">
+    <button class="bigbtn blue" id="exportBtn">📤 <span data-i18n="export"></span></button>
+    <button class="bigbtn secondary" id="reportBack" data-i18n="back"></button>
+  </div>
+</section>
+
+<!-- SOS -->
+<section class="screen" id="scr-sos">
+  <div class="step-title" data-i18n="sos_name"></div>
+  <div class="illus"><span class="em">🆘</span></div>
+  <div class="step-sub" data-i18n="sos_text"></div>
+  <div class="stack">
+    <a href="tel:112" class="bigbtn" style="text-decoration:none;">📞 <span data-i18n="sos_call"></span></a>
+    <button class="bigbtn secondary" id="sosBack" data-i18n="back"></button>
+  </div>
+</section>
+
 <video id="video" autoplay playsinline muted></video>
-
-<script>
-"use strict";
-// =================================================================
-// SPHL Core v0.3 — guided, voice-assisted measurements
-//   1. Heart rate + HRV  — camera PPG (blueprint §5.1)
-//   2. Respiratory rate  — phone-on-chest motion sensing (§9.1/§18)
-// Both use signal-quality gating and the personal baseline (§22–23).
-// =================================================================
-const APP_VERSION = "0.2.2";
-const PPG_ALGO = "0.2.2";
-const RESP_ALGO = "0.1.0";
-const HEART_SECONDS = 30, BREATH_SECONDS = 45;
-const FS_TARGET = 30;
-const MIN_IBI_MS = 333, MAX_IBI_MS = 1500;          // 40–180 bpm
-const MIN_BR_MS = 1500, MAX_BR_MS = 12000;          // 5–40 breaths/min
-const STILL_THRESH = 0.45;                          // m/s² high-freq RMS
-
-// ---------------- i18n ----------------
-const I18N = {
-  en: {
-    voice: "en-IN",
-    measure_now: "Check my heart", measure_breath: "Check my breathing",
-    history_title: "My measurements",
-    guide_title: "Cover the camera",
-    guide_text: "The light on the back will turn ON — leave it open, do not cover it. Cover only ONE camera circle fully with your fingertip. If the phone says finger not found, slide your finger to the next camera circle until it says Good.",
-    bguide_title: "Phone on your chest",
-    bguide_text: "Sit back or lie down. Place the phone flat on your chest, screen up. Breathe normally. Stay still for 45 seconds.",
-    start: "Start", back: "Back", cancel: "Stop",
-    bpm: "heartbeats per minute", brpm: "breaths per minute",
-    result_title: "Your result",
-    hrv: "Heart rhythm variation (ms)", breaths_counted: "Breaths counted", quality: "Measurement quality",
-    again: "Measure again", done: "Done",
-    q_good: "Good", q_fair: "Okay", q_poor: "Poor",
-    measuring: "Measuring…", hold_still: "Hold still",
-    disclaimer: "Experimental — not a medical device. Not for medical decisions.",
-    baseline_none: "Your normal range will appear after 3 good measurements.",
-    baseline_hr: (m, s) => `Normal heart: ${m} ± ${s} per minute`,
-    baseline_br: (m, s) => `Normal breathing: ${m} ± ${s} per minute`,
-    v_welcome: "Welcome to Sirony Pocket Health Lab.",
-    v_guide: "The light on the back of your phone will turn on. Do not cover the light. Cover only one camera circle fully with your fingertip and press softly. If I say finger not found, slide your finger to the next camera circle until I say good.",
-    v_bguide: "Sit back or lie down. Place the phone flat on your chest with the screen facing up. Breathe normally and stay still. I will count your breathing for forty five seconds.",
-    v_started: "Measuring. Keep your finger still for thirty seconds.",
-    v_bstarted: "Measuring your breathing. Stay still and breathe normally.",
-    v_finger_lost: "Finger not found. Slide your fingertip to the next camera circle until I say good.",
-    v_finger_ok: "Good. Hold still.",
-    v_move: "Too much movement. Please stay still.",
-    v_still_ok: "Good. Breathe normally.",
-    v_done_ok: hr => `Done. Your heart rate is ${hr} beats per minute.`,
-    v_bdone_ok: rr => `Done. You are breathing ${rr} times per minute.`,
-    v_done_normal: "This is within your normal range.",
-    v_done_dev: "This is different from your normal. Please rest and measure again. If you feel unwell, see a health worker.",
-    v_fail: "The measurement did not work. Please try again in bright light. Cover one camera circle fully and keep your hand very still.",
-    v_bfail: "The measurement did not work. Place the phone flat on your chest, stay very still, and try again.",
-    r_fail: "Could not measure. Try again in bright light — near a lamp or window. Cover one camera circle fully and keep your hand very still.",
-    r_bfail: "Could not measure. Place the phone flat on your chest, stay very still, and try again.",
-    r_normal: "Within your normal range.",
-    r_first: "Saved. Measure 3 times on different days to learn your normal range.",
-    r_dev: "Different from your normal. Rest for 5 minutes and measure again. If you feel unwell, see a health worker."
-  },
-  hi: {
-    voice: "hi-IN",
-    measure_now: "दिल की जाँच करें", measure_breath: "साँस की जाँच करें",
-    history_title: "मेरी जाँचें",
-    guide_title: "कैमरे को ढकें",
-    guide_text: "पीछे की लाइट जल जाएगी — लाइट को न ढकें। सिर्फ एक कैमरे के गोले को उंगली से पूरा ढकें। अगर फोन कहे उंगली नहीं मिली, तो उंगली अगले कैमरे के गोले पर खिसकाएँ जब तक फोन कहे बहुत अच्छा।",
-    bguide_title: "फोन छाती पर रखें",
-    bguide_text: "आराम से बैठें या लेट जाएँ। फोन को छाती पर सीधा रखें, स्क्रीन ऊपर। सामान्य साँस लें। 45 सेकंड स्थिर रहें।",
-    start: "शुरू करें", back: "वापस", cancel: "रोकें",
-    bpm: "धड़कन प्रति मिनट", brpm: "साँस प्रति मिनट",
-    result_title: "आपका परिणाम",
-    hrv: "धड़कन में बदलाव (ms)", breaths_counted: "गिनी गई साँसें", quality: "जाँच की गुणवत्ता",
-    again: "फिर से जाँचें", done: "पूरा हुआ",
-    q_good: "अच्छी", q_fair: "ठीक", q_poor: "खराब",
-    measuring: "जाँच हो रही है…", hold_still: "स्थिर रहें",
-    disclaimer: "प्रायोगिक — यह चिकित्सा उपकरण नहीं है। इलाज के फैसले के लिए नहीं।",
-    baseline_none: "3 अच्छी जाँच के बाद आपकी सामान्य सीमा दिखेगी।",
-    baseline_hr: (m, s) => `सामान्य धड़कन: ${m} ± ${s} प्रति मिनट`,
-    baseline_br: (m, s) => `सामान्य साँस: ${m} ± ${s} प्रति मिनट`,
-    v_welcome: "सिरोनी पॉकेट हेल्थ लैब में आपका स्वागत है।",
-    v_guide: "आपके फोन के पीछे की लाइट जल जाएगी। लाइट को न ढकें। सिर्फ एक कैमरे के गोले को उंगली से पूरा ढकें और हल्के से दबाएँ। अगर मैं कहूँ उंगली नहीं मिली, तो उंगली अगले कैमरे के गोले पर खिसकाएँ जब तक मैं कहूँ बहुत अच्छा।",
-    v_bguide: "आराम से बैठें या लेट जाएँ। फोन को छाती पर सीधा रखें, स्क्रीन ऊपर की ओर। सामान्य साँस लें और स्थिर रहें। मैं पैंतालीस सेकंड तक आपकी साँस गिनूँगा।",
-    v_started: "जाँच शुरू। तीस सेकंड तक उंगली स्थिर रखें।",
-    v_bstarted: "साँस की जाँच शुरू। स्थिर रहें और सामान्य साँस लेते रहें।",
-    v_finger_lost: "उंगली नहीं मिली। उंगली को अगले कैमरे के गोले पर खिसकाएँ जब तक मैं कहूँ बहुत अच्छा।",
-    v_finger_ok: "बहुत अच्छा। स्थिर रहें।",
-    v_move: "बहुत हिल रहे हैं। कृपया स्थिर रहें।",
-    v_still_ok: "बहुत अच्छा। सामान्य साँस लेते रहें।",
-    v_done_ok: hr => `हो गया। आपकी धड़कन ${hr} प्रति मिनट है।`,
-    v_bdone_ok: rr => `हो गया। आप एक मिनट में ${rr} बार साँस ले रहे हैं।`,
-    v_done_normal: "यह आपकी सामान्य सीमा में है।",
-    v_done_dev: "यह आपकी सामान्य सीमा से अलग है। आराम करके फिर जाँचें। तबीयत ठीक न लगे तो स्वास्थ्य कर्मी से मिलें।",
-    v_fail: "जाँच नहीं हो पाई। तेज रोशनी में फिर कोशिश करें। एक कैमरे के गोले को पूरा ढकें और हाथ बिल्कुल स्थिर रखें।",
-    v_bfail: "जाँच नहीं हो पाई। फोन को छाती पर सीधा रखें, बिल्कुल स्थिर रहें, और फिर कोशिश करें।",
-    r_fail: "जाँच नहीं हो सकी। तेज रोशनी में — लैंप या खिड़की के पास — फिर कोशिश करें। एक कैमरे के गोले को पूरा ढकें और हाथ बिल्कुल स्थिर रखें।",
-    r_bfail: "जाँच नहीं हो सकी। फोन को छाती पर सीधा रखें, बिल्कुल स्थिर रहें, और फिर कोशिश करें।",
-    r_normal: "आपकी सामान्य सीमा में।",
-    r_first: "सहेजा गया। अपनी सामान्य सीमा जानने के लिए अलग-अलग दिन 3 बार जाँचें।",
-    r_dev: "आपकी सामान्य सीमा से अलग। 5 मिनट आराम करके फिर जाँचें। तबीयत ठीक न लगे तो स्वास्थ्य कर्मी से मिलें।"
-  }
-};
-let LANG = localStorage.getItem("sphl_lang");
-const T = () => I18N[LANG] || I18N.en;
-
-const $ = id => document.getElementById(id);
-function applyI18n() {
-  document.querySelectorAll("[data-i18n]").forEach(el => {
-    const v = T()[el.dataset.i18n];
-    if (typeof v === "string") el.textContent = v;
-  });
-  document.documentElement.lang = LANG || "en";
-}
-
-// ---------------- speech guidance ----------------
-let voicesReady = [];
-if ("speechSynthesis" in window) {
-  speechSynthesis.onvoiceschanged = () => { voicesReady = speechSynthesis.getVoices(); };
-  voicesReady = speechSynthesis.getVoices();
-}
-function speak(text) {
-  if (!("speechSynthesis" in window) || !text) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  const langTag = T().voice;
-  u.lang = langTag;
-  const v = voicesReady.find(v => v.lang === langTag) ||
-            voicesReady.find(v => v.lang && v.lang.startsWith(langTag.split("-")[0]));
-  if (v) u.voice = v;
-  u.rate = 0.95;
-  speechSynthesis.speak(u);
-}
-function buzz(pattern) { if (navigator.vibrate) navigator.vibrate(pattern); }
-function show(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  $(id).classList.add("active");
-}
-
-// ---------------- shared DSP helpers ----------------
-function movingAverage(arr, w) {
-  const out = new Array(arr.length); let acc = 0;
-  for (let i = 0; i < arr.length; i++) {
-    acc += arr[i]; if (i >= w) acc -= arr[i - w];
-    out[i] = acc / Math.min(i + 1, w);
-  }
-  return out;
-}
-function bandpass(values, fs, slowSec, fastSec) {
-  // Double detrend pass: a single moving-average subtraction leaves enough
-  // in-band drift (breathing, exposure) to tilt the autocorrelation peak
-  // and bias the rate a few percent high.
-  const w = Math.max(3, Math.round(fs * slowSec));
-  let det = values.map((v, i) => v - movingAverage(values, w)[i]);
-  det = det.map((v, i) => v - movingAverage(det, w)[i]);
-  return movingAverage(det, Math.max(2, Math.round(fs * fastSec)));
-}
-function detectPeaks(sig, times, minGapMs, thrFactor) {
-  const peaks = [];
-  const amp = Math.sqrt(sig.reduce((a, v) => a + v * v, 0) / sig.length);
-  const thr = amp * thrFactor;
-  let lastPeakT = -Infinity;
-  for (let i = 2; i < sig.length - 2; i++) {
-    if (sig[i] > thr && sig[i] >= sig[i-1] && sig[i] >= sig[i+1] &&
-        sig[i] > sig[i-2] && sig[i] > sig[i+2]) {
-      if (times[i] - lastPeakT >= minGapMs) { peaks.push(times[i]); lastPeakT = times[i]; }
-    }
-  }
-  return peaks;
-}
-function intervalStats(ibis) {
-  const sorted = [...ibis].sort((a, b) => a - b);
-  const med = sorted[Math.floor(sorted.length / 2)];
-  const mean = ibis.reduce((a, v) => a + v, 0) / ibis.length;
-  const cv = Math.sqrt(ibis.reduce((a, v) => a + (v - mean) ** 2, 0) / ibis.length) / mean;
-  return { med, mean, cv };
-}
-
-// ---------------- mode state ----------------
-let MODE = "heart";           // "heart" | "breath"
-let running = false, rafId = null, tickTimer = null, startTime = 0, lastResult = null;
-let lastCueState = null, lastCueAt = 0;
-
-const waveCanvas = $("wave"), waveCtx = waveCanvas.getContext("2d");
-const RING_LEN = 628;
-const durationFor = () => MODE === "heart" ? HEART_SECONDS : BREATH_SECONDS;
-
-// ---------------- HEART: camera PPG ----------------
-const video = $("video");
-const grab = document.createElement("canvas");
-grab.width = 64; grab.height = 48;
-const grabCtx = grab.getContext("2d", { willReadFrequently: true });
-let stream = null, track = null, samples = [];
-
-async function startCapture() {
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment", width: { ideal: 640 }, frameRate: { ideal: FS_TARGET } },
-      audio: false
-    });
-  } catch (e) {
-    alert("Camera access failed: " + e.message + "\n(HTTPS or localhost required)");
-    return false;
-  }
-  video.srcObject = stream;
-  track = stream.getVideoTracks()[0];
-  try {
-    const caps = track.getCapabilities ? track.getCapabilities() : {};
-    if (caps.torch) await track.applyConstraints({ advanced: [{ torch: true }] });
-  } catch (_) {}
-  return true;
-}
-function stopCapture() {
-  if (stream) stream.getTracks().forEach(t => t.stop());
-  stream = null; track = null;
-}
-function scheduleFrame() {
-  // requestVideoFrameCallback samples once per real camera frame (no rAF duplicates)
-  if ("requestVideoFrameCallback" in HTMLVideoElement.prototype)
-    video.requestVideoFrameCallback(() => sampleFrame());
-  else rafId = requestAnimationFrame(sampleFrame);
-}
-function sampleFrame() {
-  if (!running || MODE !== "heart") return;
-  grabCtx.drawImage(video, 0, 0, grab.width, grab.height);
-  const d = grabCtx.getImageData(16, 12, 32, 24).data;
-  let r = 0, g = 0, b = 0, n = d.length / 4;
-  for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i+1]; b += d[i+2]; }
-  r /= n; g /= n; b /= n;
-  const t = performance.now();
-  samples.push({ t, r, g, b });
-  while (samples.length && samples[0].t < t - 25000) samples.shift();
-  heartTick(t);
-  scheduleFrame();
-}
-function fingerDetected(s) { return s.r > 60 && s.r > s.g * 1.4 && s.r > s.b * 1.4; }
-
-// Autocorrelation over the physiological lag range: finds the dominant
-// repeating period. Robust against double-counted peaks, which inflate
-// simple peak-counting (the v0.1 failure mode).
-function autocorrHR(sig, fs) {
-  const n = sig.length;
-  const mean = sig.reduce((a, v) => a + v, 0) / n;
-  const x = sig.map(v => v - mean);
-  const e0 = x.reduce((a, v) => a + v * v, 0);
-  if (e0 === 0) return null;
-  const minLag = Math.max(2, Math.round(fs * MIN_IBI_MS / 1000));
-  const maxLag = Math.min(Math.round(fs * MAX_IBI_MS / 1000), n - 3);
-  if (maxLag <= minLag + 1) return null;
-  // Full autocorrelation curve (one lag beyond each edge for peak testing)
-  const lo = minLag - 1, hi = maxLag + 1;
-  const r = new Array(hi + 1).fill(0);
-  for (let lag = lo; lag <= hi; lag++) {
-    let s = 0;
-    for (let i = 0; i < n - lag; i++) s += x[i] * x[i + lag];
-    // Unbiased: divide by the number of summed terms, else the curve tilts
-    // toward short lags and every rate reads a few percent high.
-    r[lag] = (s / (n - lag)) / (e0 / n);
-  }
-  // A real pulse gives a LOCAL PEAK in the curve. Noise and residual drift
-  // give a monotonic slope whose maximum sits at the range boundary — the
-  // v0.2 failure (reported exactly 180 bpm). Boundary maxima are rejected.
-  let bestLag = -1, bestR = -1;
-  for (let lag = minLag; lag <= maxLag; lag++) {
-    if (r[lag] > r[lag - 1] && r[lag] >= r[lag + 1] && r[lag] > bestR) {
-      bestR = r[lag]; bestLag = lag;
-    }
-  }
-  if (bestLag < 0 || bestR < 0.35) return null;
-  // Sub-harmonic guard: if double the period is also a local peak scoring
-  // nearly as well, the true beat is the slower one.
-  const dbl = bestLag * 2;
-  if (dbl >= minLag && dbl <= maxLag && r[dbl] > r[dbl-1] && r[dbl] >= r[dbl+1] &&
-      r[dbl] > bestR * 0.85) { bestLag = dbl; bestR = r[dbl]; }
-  // Parabolic interpolation around the peak: at 30 fps the discrete lags are
-  // ~7 bpm apart near 110 bpm, so sub-sample refinement matters.
-  const denom = r[bestLag-1] - 2*r[bestLag] + r[bestLag+1];
-  const frac = denom !== 0 ? 0.5 * (r[bestLag-1] - r[bestLag+1]) / denom : 0;
-  const lagRef = bestLag + Math.max(-0.5, Math.min(0.5, frac));
-  return { hr: 60 * fs / lagRef, strength: bestR };
-}
-function analyseHeart() {
-  // Discard the first 5 s (camera exposure/white-balance settling)
-  const useFrom = startTime + 5000;
-  const use = samples.filter(s => s.t >= useFrom);
-  if (use.length < FS_TARGET * 4) return null;
-  const times = use.map(s => s.t);
-  const dur = (times[times.length - 1] - times[0]) / 1000;
-  const fs = use.length / dur;
-  // Try red and green channels; ambient-light PPG (iPhone: no web torch)
-  // is often stronger in green. Pick whichever has the clearer periodicity.
-  let sig = null, ac = null;
-  for (const ch of ["r", "g"]) {
-    const s2 = bandpass(use.map(s => s[ch]), fs, 1.2, 0.12);
-    const a2 = autocorrHR(s2, fs);
-    if (a2 && (!ac || a2.strength > ac.strength)) { ac = a2; sig = s2; }
-  }
-  if (!ac) return { sig, hr: null, quality: 0 };
-  // Independent cross-check: peak-detected rate must agree with autocorrelation
-  const peaks = detectPeaks(sig, times, MIN_IBI_MS, 0.6);
-  const ibis = [];
-  for (let i = 1; i < peaks.length; i++) {
-    const ibi = peaks[i] - peaks[i - 1];
-    if (ibi >= MIN_IBI_MS && ibi <= MAX_IBI_MS) ibis.push(ibi);
-  }
-  let agreement = 0, regularity = 0, rmssd = null, cv = 1;
-  if (ibis.length >= 4) {
-    const st = intervalStats(ibis);
-    cv = st.cv;
-    const hrP = 60000 / st.med;
-    agreement = Math.max(0, 1 - Math.abs(ac.hr - hrP) / ac.hr / 0.12);
-    regularity = Math.max(0, 1 - cv * 2.2);
-    let ss = 0;
-    for (let i = 1; i < ibis.length; i++) ss += (ibis[i] - ibis[i - 1]) ** 2;
-    rmssd = Math.sqrt(ss / (ibis.length - 1));
-  }
-  const contact = use.filter(fingerDetected).length / use.length;
-  const strengthNorm = Math.min(1, ac.strength / 0.6);
-  let quality = Math.max(0, Math.min(1,
-    0.35 * strengthNorm + 0.25 * agreement + 0.15 * regularity + 0.25 * contact));
-  // Hard gate: without independent agreement from beat detection, a result
-  // can never pass (0.5) no matter how strong the periodicity looks.
-  if (ibis.length < 4 || agreement < 0.5) quality = Math.min(quality, 0.4);
-  // Noise trap: broadband noise drives BOTH estimators to the rate ceiling
-  // (beat detector fires at its refractory limit, autocorrelation at the
-  // shortest lag) and they fake-agree near 180. Rates that high are only
-  // accepted from an unambiguous, highly regular signal.
-  if (ac.hr > 165 && (ac.strength < 0.6 || cv > 0.12)) quality = Math.min(quality, 0.4);
-  // HRV is far more fragile than HR: report it only from a clean recording
-  const hrvOk = quality > 0.7 && cv < 0.2 && rmssd !== null && rmssd < 150;
-  return { sig, hr: ac.hr, rmssd: hrvOk ? rmssd : null, quality };
-}
-function heartTick(now) {
-  const s = samples[samples.length - 1];
-  const ok = fingerDetected(s);
-  updatePill(ok, ok ? T().v_finger_ok : T().v_finger_lost, now);
-  const res = analyseHeart();
-  lastResult = res;
-  $("hrLive").textContent = (res && res.hr && res.quality > 0.35) ? Math.round(res.hr) : "--";
-  $("measureTitle").textContent = (res && res.hr) ? T().hold_still : T().measuring;
-  if (res) drawWave(res.sig, "#ff5d73");
-  progressTick(now);
-}
-
-// ---------------- BREATH: chest motion ----------------
-let msamples = [];   // {t, x, y, z}
-function onMotion(e) {
-  const a = e.accelerationIncludingGravity;
-  if (!a || a.x === null) return;
-  const t = performance.now();
-  msamples.push({ t, x: a.x, y: a.y, z: a.z });
-  while (msamples.length && msamples[0].t < t - (BREATH_SECONDS + 5) * 1000) msamples.shift();
-}
-async function startMotion() {
-  if (typeof DeviceMotionEvent !== "undefined" &&
-      typeof DeviceMotionEvent.requestPermission === "function") {
-    try {
-      const p = await DeviceMotionEvent.requestPermission();
-      if (p !== "granted") { alert("Motion sensor permission is needed to measure breathing."); return false; }
-    } catch (e) { alert("Motion sensor unavailable: " + e.message); return false; }
-  }
-  msamples = [];
-  window.addEventListener("devicemotion", onMotion);
-  return true;
-}
-function stopMotion() { window.removeEventListener("devicemotion", onMotion); }
-
-function stillness(windowMs) {
-  // High-frequency movement level over the recent window (gross motion, not breathing)
-  const t1 = performance.now(), t0 = t1 - windowMs;
-  const win = msamples.filter(s => s.t >= t0);
-  if (win.length < 10) return { still: true, rms: 0 };
-  const mags = win.map(s => Math.sqrt(s.x*s.x + s.y*s.y + s.z*s.z));
-  const smooth = movingAverage(mags, Math.max(3, Math.round(win.length / 8)));
-  let acc = 0;
-  for (let i = 0; i < mags.length; i++) acc += (mags[i] - smooth[i]) ** 2;
-  const rms = Math.sqrt(acc / mags.length);
-  return { still: rms < STILL_THRESH, rms };
-}
-function analyseBreath() {
-  if (msamples.length < 100) return null;
-  const times = msamples.map(s => s.t);
-  const dur = (times[times.length-1] - times[0]) / 1000;
-  if (dur < 10) return null;
-  const fs = msamples.length / dur;
-  // Band-pass each axis to breathing band (~0.08–0.7 Hz); pick strongest
-  let best = null, bestRms = -1;
-  for (const axis of ["x", "y", "z"]) {
-    const sig = bandpass(msamples.map(s => s[axis]), fs, 6.0, 0.5);
-    const rms = Math.sqrt(sig.reduce((a, v) => a + v * v, 0) / sig.length);
-    if (rms > bestRms) { bestRms = rms; best = sig; }
-  }
-  const peaks = detectPeaks(best, times, MIN_BR_MS, 0.5);
-  const ibis = [];
-  for (let i = 1; i < peaks.length; i++) {
-    const ibi = peaks[i] - peaks[i-1];
-    if (ibi >= MIN_BR_MS && ibi <= MAX_BR_MS) ibis.push(ibi);
-  }
-  if (ibis.length < 3) return { sig: best, rr: null, quality: 0 };
-  const { med, mean, cv } = intervalStats(ibis);
-  const rr = 60000 / med;
-  const regularity = Math.max(0, 1 - cv * 1.8);
-  const coverage = Math.min(1, (ibis.length * mean) / (dur * 1000));
-  // Stillness fraction across whole recording
-  const stillFrac = 1 - Math.min(1, stillness(dur * 1000).rms / (STILL_THRESH * 2));
-  const quality = Math.max(0, Math.min(1, 0.45 * regularity + 0.30 * coverage + 0.25 * stillFrac));
-  return { sig: best, rr, breaths: ibis.length + 1, quality };
-}
-function breathTick() {
-  if (!running || MODE !== "breath") return;
-  const now = performance.now();
-  const st = stillness(2500);
-  updatePill(st.still, st.still ? T().v_still_ok : T().v_move, now);
-  const res = analyseBreath();
-  lastResult = res;
-  $("hrLive").textContent = (res && res.rr && res.quality > 0.2 && (now - startTime) > 15000)
-    ? Math.round(res.rr) : "--";
-  $("measureTitle").textContent = T().measuring;
-  if (res && res.sig) drawWave(res.sig, "#4aa3ff");
-  progressTick(now);
-}
-
-// ---------------- shared live UI ----------------
-function updatePill(ok, text, now) {
-  const pill = $("contactPill");
-  pill.className = "contact-pill " + (ok ? "ok" : "no");
-  $("contactText").textContent = text;
-  if (ok !== lastCueState && now - lastCueAt > 4000) {
-    speak(text);
-    if (!ok) buzz([120, 80, 120]);
-    lastCueState = ok; lastCueAt = now;
-  }
-}
-function progressTick(now) {
-  const elapsed = (now - startTime) / 1000;
-  $("ringProg").style.strokeDashoffset = Math.max(0, RING_LEN * (1 - elapsed / durationFor()));
-  if (elapsed >= durationFor()) finishMeasurement();
-}
-function drawWave(sig, color) {
-  const W = waveCanvas.width = waveCanvas.clientWidth * devicePixelRatio;
-  const H = waveCanvas.height = 70 * devicePixelRatio;
-  waveCtx.clearRect(0, 0, W, H);
-  const view = sig.slice(-Math.floor(sig.length * 0.6));
-  if (view.length < 2) return;
-  let mn = Infinity, mx = -Infinity;
-  for (const v of view) { if (v < mn) mn = v; if (v > mx) mx = v; }
-  const span = (mx - mn) || 1;
-  waveCtx.beginPath();
-  waveCtx.strokeStyle = color; waveCtx.lineWidth = 2 * devicePixelRatio;
-  view.forEach((v, i) => {
-    const x = (i / (view.length - 1)) * W;
-    const y = H - ((v - mn) / span) * (H * 0.8) - H * 0.1;
-    i ? waveCtx.lineTo(x, y) : waveCtx.moveTo(x, y);
-  });
-  waveCtx.stroke();
-}
-
-// ---------------- lifecycle ----------------
-function openGuide(mode) {
-  MODE = mode;
-  $("guideTitle").textContent = mode === "heart" ? T().guide_title : T().bguide_title;
-  $("guideText").textContent = mode === "heart" ? T().guide_text : T().bguide_text;
-  $("illusHeart").style.display = mode === "heart" ? "" : "none";
-  $("illusBreath").style.display = mode === "breath" ? "" : "none";
-  show("scr-guide");
-  speak(mode === "heart" ? T().v_guide : T().v_bguide);
-}
-async function startMeasurement() {
-  $("startBtn").disabled = true;
-  const ok = MODE === "heart" ? await startCapture() : await startMotion();
-  if (!ok) { $("startBtn").disabled = false; return; }
-  running = true; startTime = performance.now();
-  lastCueState = null; lastCueAt = 0; lastResult = null;
-  samples = [];
-  $("ringProg").style.strokeDashoffset = RING_LEN;
-  $("ringProg").setAttribute("stroke", MODE === "heart" ? "#ff5d73" : "#4aa3ff");
-  $("unitLive").textContent = MODE === "heart" ? T().bpm : T().brpm;
-  $("hrLive").textContent = "--";
-  show("scr-measure");
-  $("startBtn").disabled = false;
-  speak(MODE === "heart" ? T().v_started : T().v_bstarted);
-  if (MODE === "heart") scheduleFrame();
-  else tickTimer = setInterval(breathTick, 250);
-}
-function teardown() {
-  running = false;
-  if (rafId) cancelAnimationFrame(rafId);
-  if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
-  stopCapture(); stopMotion();
-}
-function cancelMeasurement() {
-  teardown();
-  if ("speechSynthesis" in window) speechSynthesis.cancel();
-  show("scr-home");
-}
-const ICON_OK = '<svg width="84" height="84" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="rgba(61,220,151,0.15)"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#3ddc97" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const ICON_RETRY = '<svg width="84" height="84" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="rgba(255,200,87,0.15)"/><path d="M12 6.5V4l-3.2 3 3.2 3V7.7a4.3 4.3 0 1 1-4.3 4.3H6a6 6 0 1 0 6-5.5z" fill="#ffc857"/></svg>';
-
-function finishMeasurement() {
-  const res = lastResult;
-  teardown();
-  const isHeart = MODE === "heart";
-  const value = res ? (isHeart ? res.hr : res.rr) : null;
-  $("unitResult").textContent = isHeart ? T().bpm : T().brpm;
-  $("rExtraLabel").textContent = isHeart ? T().hrv : T().breaths_counted;
-
-  if (!res || !value || res.quality < (isHeart ? 0.5 : 0.25)) {
-    $("resultIcon").innerHTML = ICON_RETRY;
-    $("rHr").textContent = "--";
-    $("rExtra").textContent = "--"; $("rQual").textContent = T().q_poor;
-    $("rMsg").textContent = isHeart ? T().r_fail : T().r_bfail;
-    show("scr-result");
-    speak(isHeart ? T().v_fail : T().v_bfail);
-    buzz([300]);
-    return;
-  }
-  const rounded = Math.round(value);
-  const quality = res.quality;
-  const type = isHeart ? "heart_rate" : "respiratory_rate";
-  const record = {
-    measurement_id: crypto.randomUUID(),
-    measurement_type: type, value: rounded,
-    unit: isHeart ? "bpm" : "breaths/min",
-    source: isHeart ? "camera_ppg" : "accelerometer",
-    evidence_class: "B", tier: "T0",
-    signal_quality: +quality.toFixed(2),
-    confidence: +Math.min(1, quality * 1.05).toFixed(2),
-    algorithm_version: isHeart ? PPG_ALGO : RESP_ALGO,
-    timestamp: new Date().toISOString()
-  };
-  if (isHeart && res.rmssd !== null) record.hrv_rmssd_ms = Math.round(res.rmssd);
-  else if (!isHeart) record.breaths_counted = res.breaths;
-
-  const hist = loadHistory();
-  const base = baseline(hist, type);
-  hist.push(record);
-  localStorage.setItem("sphl_history", JSON.stringify(hist));
-
-  $("rHr").textContent = rounded;
-  $("rExtra").textContent = isHeart ? (res.rmssd !== null ? Math.round(res.rmssd) : "--") : res.breaths;
-  $("rQual").textContent = quality > 0.7 ? T().q_good : quality > 0.4 ? T().q_fair : T().q_poor;
-
-  let msg, vmsg, ok = true;
-  if (!base) { msg = T().r_first; vmsg = ""; }
-  else {
-    const dev = Math.abs(rounded - base.mean) / (base.sd || (isHeart ? 5 : 2));
-    if (dev < 2) { msg = T().r_normal; vmsg = T().v_done_normal; }
-    else { msg = T().r_dev; vmsg = T().v_done_dev; ok = false; }
-  }
-  $("resultIcon").innerHTML = ok ? ICON_OK : ICON_RETRY;
-  $("rMsg").textContent = msg;
-  renderHistory();
-  show("scr-result");
-  buzz(ok ? [80, 60, 80] : [250, 100, 250]);
-  speak((isHeart ? T().v_done_ok(rounded) : T().v_bdone_ok(rounded)) + " " + vmsg);
-}
-
-// ---------------- baseline + history ----------------
-function loadHistory() {
-  try { return JSON.parse(localStorage.getItem("sphl_history")) || []; }
-  catch (_) { return []; }
-}
-function baseline(hist, type) {
-  // Heart baseline only trusts the current algorithm at good quality —
-  // this retires readings taken by the flawed v0.1 peak counter.
-  const vals = hist.filter(h => (h.measurement_type || "heart_rate") === type &&
-      (type !== "heart_rate" || (h.algorithm_version === PPG_ALGO && h.signal_quality >= 0.6)) &&
-      h.signal_quality >= 0.4)
-                   .map(h => h.value);
-  if (vals.length < 3) return null;
-  const mean = vals.reduce((a, v) => a + v, 0) / vals.length;
-  const sd = Math.sqrt(vals.reduce((a, v) => a + (v - mean) ** 2, 0) / vals.length);
-  return { mean, sd: Math.max(sd, type === "heart_rate" ? 3 : 1.5) };
-}
-function renderHistory() {
-  const hist = loadHistory();
-  const el = $("history");
-  el.innerHTML = hist.length
-    ? hist.slice(-6).reverse().map(h => {
-        const isHr = (h.measurement_type || "heart_rate") === "heart_rate";
-        return `<div class="entry"><div><b>${h.value}</b> ${isHr ? "❤️" : "🫁"}
-         <span class="badge ${h.signal_quality > 0.7 ? "good" : h.signal_quality > 0.4 ? "warn" : "bad"}">${
-           h.signal_quality > 0.7 ? T().q_good : h.signal_quality > 0.4 ? T().q_fair : T().q_poor}</span></div>
-         <div class="t">${new Date(h.timestamp).toLocaleDateString()}</div></div>`;
-      }).join("")
-    : "";
-  const bHr = baseline(hist, "heart_rate");
-  const bBr = baseline(hist, "respiratory_rate");
-  const lines = [];
-  if (bHr) lines.push(T().baseline_hr(Math.round(bHr.mean), Math.round(bHr.sd)));
-  if (bBr) lines.push(T().baseline_br(Math.round(bBr.mean), Math.round(bBr.sd)));
-  $("baselineLine").textContent = lines.length ? lines.join(" · ") : T().baseline_none;
-}
-
-// ---------------- wiring ----------------
-document.querySelectorAll("#scr-lang [data-lang]").forEach(btn =>
-  btn.addEventListener("click", () => {
-    LANG = btn.dataset.lang;
-    localStorage.setItem("sphl_lang", LANG);
-    applyI18n(); renderHistory();
-    show("scr-home");
-    speak(T().v_welcome);
-  })
-);
-$("langSwitch").addEventListener("click", () => show("scr-lang"));
-$("goMeasure").addEventListener("click", () => openGuide("heart"));
-$("goBreath").addEventListener("click", () => openGuide("breath"));
-$("guideBack").addEventListener("click", () => { if ("speechSynthesis" in window) speechSynthesis.cancel(); show("scr-home"); });
-$("startBtn").addEventListener("click", startMeasurement);
-$("stopBtn").addEventListener("click", cancelMeasurement);
-$("againBtn").addEventListener("click", () => openGuide(MODE));
-$("doneBtn").addEventListener("click", () => { if ("speechSynthesis" in window) speechSynthesis.cancel(); show("scr-home"); });
-
-// PWA
-if ("serviceWorker" in navigator && location.protocol === "https:") {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
-}
-
-// boot
-$("verLine").textContent = "SPHL web v" + APP_VERSION;
-if (LANG && I18N[LANG]) { applyI18n(); renderHistory(); show("scr-home"); }
-else { show("scr-lang"); }
-</script>
+<script src="app.js"></script>
 </body>
 </html>
